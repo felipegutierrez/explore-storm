@@ -99,11 +99,11 @@ public class MqttSensorSpout extends BaseRichSpout {
 				Message message = blockingConnection.receive();
 				String payload = new String(message.getPayload());
 
-				System.out.println("message[" + topic + "]: " + payload);
+				// System.out.println("message[" + topic + "]: " + payload);
 
 				message.ack();
 
-				collector.emit(new Values(payload));
+				collector.emit(new Values(topic, payload));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -121,7 +121,7 @@ public class MqttSensorSpout extends BaseRichSpout {
 	}
 
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("from", "to", "duration"));
+		declarer.declare(new Fields("topic", "payload"));
 	}
 
 	public Map<String, Object> getComponentConfiguration() {
