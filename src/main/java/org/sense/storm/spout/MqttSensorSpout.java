@@ -99,7 +99,7 @@ public class MqttSensorSpout extends BaseRichSpout {
 				Message message = blockingConnection.receive();
 				String payload = new String(message.getPayload());
 
-				System.out.println("message: " + payload);
+				System.out.println("message[" + topic + "]: " + payload);
 
 				message.ack();
 

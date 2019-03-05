@@ -13,7 +13,8 @@ public class MqttSensorTopology {
 		config.setDebug(false);
 
 		TopologyBuilder builder = new TopologyBuilder();
-		builder.setSpout("call-log-reader-spout", new MqttSensorSpout("topic-station-01"));
+		builder.setSpout("spout-station-01", new MqttSensorSpout("topic-station-01"));
+		builder.setSpout("spout-station-02", new MqttSensorSpout("topic-station-02"));
 
 		LocalCluster cluster = new LocalCluster();
 		cluster.submitTopology("LogAnalyserStorm", config, builder.createTopology());

@@ -11,7 +11,7 @@ public class App {
 			do {
 				// @formatter:off
 				System.out.println("0  - exit");
-				System.out.println("1  - World count ");
+				System.out.println("1  - reading from station sensors ");
 				// @formatter:on
 
 				String msg = "0";
