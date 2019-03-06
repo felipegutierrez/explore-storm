@@ -40,7 +40,9 @@ public class SensorPrintBolt extends BaseRichBolt {
 		collector.ack(input);
 		// print here or wait until the application finishes to execute the cleanup()
 		// method
-		// System.out.println(input.toString());
+		String result = "Bolt sink: sensorId[" + sensorId + "] sensorType[" + sensorType + "] platformId[" + platformId
+				+ "] platformType[" + platformType + "] stationId[" + stationId + "] value[" + value + "]";
+		System.out.println(result);
 	}
 
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {

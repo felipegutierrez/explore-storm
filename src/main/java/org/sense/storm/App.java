@@ -33,8 +33,12 @@ public class App {
 					System.out.println("bis später");
 					break;
 				case 1:
-					System.out.println("App 1 selected");
-					new MqttSensorTopology();
+					// @formatter:off
+					System.out.println("Application 1 selected");
+					System.out.print("Please enter [cluster] or [local] to specify where you want to run your application: ");
+					// @formatter:on
+					msg = (new Scanner(System.in)).nextLine();
+					new MqttSensorTopology(msg);
 					app = 0;
 					break;
 				default:
