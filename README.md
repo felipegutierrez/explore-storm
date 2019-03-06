@@ -65,6 +65,10 @@ Visualize the output on one of the workers log.
 tail -f apache-storm-1.2.2/logs/workers-artifacts/MqttSensorAnalyserStorm-3-1551877355/6701/worker.log
 ```
 
+If an error occuors in the topology you may want to fix the error and re-deploy it on the cluster. However, you have to remove the topology which has an error. For this you have to execute the command bellow:
+```
+storm kill MqttSensorAnalyserStorm [-w wait-time-secs]
+```
 
 
 
