@@ -53,10 +53,8 @@ tail -f apache-storm-1.2.2/logs/ui.log
 
 ## Running a Topology
 
-Export the project as a Jar file using Eclipse IDE.
-```
-Right button on the project > Export > Runnable JAR file > Copy required libraries into sub-folder next to the generated JAR > Finish.
-```
+Export the project as a Jar file using Eclipse IDE: `Right button on the project` > `Export` > `Runnable JAR file` > `Copy required libraries into sub-folder next to the generated JAR` > `Finish`.
+
 Copy libraries to the Storm lib path
 ```
 cp -Rf explore-storm_lib/hawtdispatch-transport-1.22.jar explore-storm_lib/hawtdispatch-1.22.jar explore-storm_lib/hawtbuf-1.11.jar apache-storm-1.2.2/lib/
