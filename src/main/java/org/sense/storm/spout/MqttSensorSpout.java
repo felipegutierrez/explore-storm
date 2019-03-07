@@ -3,6 +3,7 @@ package org.sense.storm.spout;
 import java.net.URISyntaxException;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.apache.storm.spout.SpoutOutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
@@ -16,6 +17,8 @@ import org.fusesource.mqtt.client.QoS;
 import org.fusesource.mqtt.client.Topic;
 
 public class MqttSensorSpout extends BaseRichSpout {
+
+	final static Logger logger = Logger.getLogger(MqttSensorSpout.class);
 
 	private static final long serialVersionUID = 5407831157851644153L;
 
@@ -99,7 +102,9 @@ public class MqttSensorSpout extends BaseRichSpout {
 				Message message = blockingConnection.receive();
 				String payload = new String(message.getPayload());
 
-				// System.out.println("message[" + topic + "]: " + payload);
+				if (logger.isDebugEnabled()) {
+					logger.info("message[" + topic + "]: " + payload);
+				}
 
 				message.ack();
 

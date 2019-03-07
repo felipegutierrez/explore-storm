@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
@@ -12,6 +13,8 @@ import org.apache.storm.topology.base.BaseRichBolt;
 import org.apache.storm.tuple.Tuple;
 
 public class SensorPrintBolt extends BaseRichBolt {
+
+	final static Logger logger = Logger.getLogger(SensorPrintBolt.class);
 
 	private static final long serialVersionUID = 7146201246991885765L;
 
@@ -42,7 +45,7 @@ public class SensorPrintBolt extends BaseRichBolt {
 		// method
 		String result = "Bolt sink: sensorId[" + sensorId + "] sensorType[" + sensorType + "] platformId[" + platformId
 				+ "] platformType[" + platformType + "] stationId[" + stationId + "] value[" + value + "]";
-		System.out.println(result);
+		logger.info(result);
 	}
 
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
@@ -58,10 +61,10 @@ public class SensorPrintBolt extends BaseRichBolt {
 	 */
 	@Override
 	public void cleanup() {
-		System.out.println("-- Word Counter [" + name + "-" + id + "] --");
+		logger.info("-- Word Counter [" + name + "-" + id + "] --");
 		for (Iterator<String> iterator = result.iterator(); iterator.hasNext();) {
 			String string = (String) iterator.next();
-			System.out.println(string);
+			logger.info(string);
 		}
 	}
 }

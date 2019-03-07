@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.apache.storm.generated.Bolt;
 import org.apache.storm.generated.ComponentCommon;
 import org.apache.storm.generated.SpoutSpec;
@@ -30,6 +31,8 @@ import org.apache.storm.shade.org.json.simple.parser.ParseException;
 @SuppressWarnings("unused")
 public class TagAwareScheduler implements IScheduler {
 
+	final static Logger logger = Logger.getLogger(TagAwareScheduler.class);
+
 	private final String untaggedTag = "untagged";
 
 	@Override
@@ -43,6 +46,76 @@ public class TagAwareScheduler implements IScheduler {
 		tagAwareSchedule(topologies, cluster);
 	}
 
+	private void tagAwareSchedule(Topologies topologies, Cluster cluster) {
+		Collection<SupervisorDetails> supervisorDetails = cluster.getSupervisors().values();
+
+		// Get the lists of tagged and unreserved supervisors.
+		Map<String, ArrayList<SupervisorDetails>> supervisorsByTag = getSupervisorsByTag(supervisorDetails);
+
+		for (TopologyDetails topologyDetails : cluster.needsSchedulingTopologies(topologies)) {
+			StormTopology stormTopology = topologyDetails.getTopology();
+			String topologyID = topologyDetails.getId();
+
+			// Get components from topology
+			Map<String, Bolt> bolts = stormTopology.get_bolts();
+			Map<String, SpoutSpec> spouts = stormTopology.get_spouts();
+
+			// Get a map of component to executors
+			Map<String, List<ExecutorDetails>> executorsByComponent = cluster
+					.getNeedsSchedulingComponentToExecutors(topologyDetails);
+
+			// Get a map of tag to components
+			Map<String, ArrayList<String>> componentsByTag = new HashMap<String, ArrayList<String>>();
+			populateComponentsByTag(componentsByTag, bolts);
+			populateComponentsByTag(componentsByTag, spouts);
+			// populateComponentsByTagWithStormInternals(componentsByTag,
+			// executorsByComponent.keySet());
+
+			// Get a map of tag to executors
+			Map<String, ArrayList<ExecutorDetails>> executorsToBeScheduledByTag = getExecutorsToBeScheduledByTag(
+					cluster, topologyDetails, componentsByTag);
+
+			// Initialize a map of slot -> executors
+			Map<WorkerSlot, ArrayList<ExecutorDetails>> componentExecutorsToSlotsMap = (new HashMap<WorkerSlot, ArrayList<ExecutorDetails>>());
+
+			// Time to match everything up!
+			for (Entry<String, ArrayList<ExecutorDetails>> entry : executorsToBeScheduledByTag.entrySet()) {
+				String tag = entry.getKey();
+
+				ArrayList<ExecutorDetails> executorsForTag = entry.getValue();
+				if (logger.isDebugEnabled()) {
+					logger.debug("tag: " + tag);
+				}
+				ArrayList<SupervisorDetails> supervisorsForTag = supervisorsByTag.get(tag);
+				ArrayList<String> componentsForTag = componentsByTag.get(tag);
+
+				try {
+					populateComponentExecutorsToSlotsMap(componentExecutorsToSlotsMap, cluster, topologyDetails,
+							supervisorsForTag, executorsForTag, componentsForTag, tag);
+				} catch (Exception e) {
+					e.printStackTrace();
+
+					// Cut this scheduling short to avoid partial scheduling.
+					return;
+				}
+			}
+
+			// Do the actual assigning We do this as a separate step to only perform any
+			// assigning if there have been no issues so far. That's aimed at avoiding
+			// partial scheduling from occurring, with some components already scheduled and
+			// alive, while others cannot be scheduled.
+			for (Entry<WorkerSlot, ArrayList<ExecutorDetails>> entry : componentExecutorsToSlotsMap.entrySet()) {
+				WorkerSlot slotToAssign = entry.getKey();
+				ArrayList<ExecutorDetails> executorsToAssign = entry.getValue();
+
+				cluster.assign(slotToAssign, topologyID, executorsToAssign);
+			}
+
+			// If we've reached this far, then scheduling must have been successful
+			cluster.setStatus(topologyID, "SCHEDULING SUCCESSFUL");
+		}
+	}
+
 	private Map<String, ArrayList<SupervisorDetails>> getSupervisorsByTag(
 			Collection<SupervisorDetails> supervisorDetails) {
 		// A map of tag -> supervisors, to help with scheduling of components with
@@ -53,26 +126,35 @@ public class TagAwareScheduler implements IScheduler {
 			@SuppressWarnings("unchecked")
 			Map<String, String> metadata = (Map<String, String>) supervisor.getSchedulerMeta();
 
-			System.out.println("supervisor.getSchedulerMeta: " + supervisor.getSchedulerMeta());
-			System.out.println("metadata: " + metadata);
+			if (logger.isDebugEnabled()) {
+				logger.debug("supervisor.getSchedulerMeta(): " + supervisor.getSchedulerMeta());
+			}
 
 			String tags;
 
 			if (metadata == null) {
-				System.out.println("metadata null");
+				if (logger.isDebugEnabled()) {
+					logger.debug("metadata null");
+				}
 				tags = untaggedTag;
 			} else {
 				tags = metadata.get("tags");
-				System.out.println("metadata not null: " + tags);
+				if (logger.isDebugEnabled()) {
+					logger.debug("metadata not null: " + tags);
+				}
 				if (tags == null) {
-					System.out.println("tags null");
+					if (logger.isDebugEnabled()) {
+						logger.debug("tags null");
+					}
 					tags = untaggedTag;
 				}
 			}
 
 			// If the supervisor has tags attached to it, handle it by populating the
 			// supervisorsByTag map. Loop through each of the tags to handle individually
-			System.out.println("tags: " + tags);
+			if (logger.isDebugEnabled()) {
+				logger.debug("tags: " + tags);
+			}
 			for (String tag : tags.split(",")) {
 				tag = tag.trim();
 
@@ -89,7 +171,6 @@ public class TagAwareScheduler implements IScheduler {
 				}
 			}
 		}
-
 		return supervisorsByTag;
 	}
 
@@ -118,19 +199,27 @@ public class TagAwareScheduler implements IScheduler {
 
 			// If there's no config, use a fake tag to group all untagged components
 			if (conf == null) {
-				System.out.println("conf == null");
+				if (logger.isDebugEnabled()) {
+					logger.debug("conf == null");
+				}
 				tags = untaggedTag;
 			} else {
-				System.out.println("conf != null");
+				if (logger.isDebugEnabled()) {
+					logger.debug("conf != null");
+				}
 				tags = (String) conf.get("tags");
 
 				// If there are no tags, use a fake tag to group all untagged components
 				if (tags == null) {
-					System.out.println("tags == null");
+					if (logger.isDebugEnabled()) {
+						logger.debug("tags == null");
+					}
 					tags = untaggedTag;
 				}
 			}
-			System.out.println("populateComponentsByTag tags: " + tags);
+			if (logger.isDebugEnabled()) {
+				logger.debug("populateComponentsByTag tags: " + tags);
+			}
 
 			// If the component has tags attached to it, handle it by populating the
 			// componentsByTag map. Loop through each of the tags to handle individually
@@ -167,14 +256,20 @@ public class TagAwareScheduler implements IScheduler {
 
 		for (String componentID : components) {
 			if (componentID.startsWith("__")) {
-				System.out.println("componentID.startsWith(\"__\")");
+				if (logger.isDebugEnabled()) {
+					logger.debug("componentID.startsWith(\"__\")");
+				}
 				if (componentsByTag.containsKey(untaggedTag)) {
-					System.out.println("component contains untaggedTag: " + untaggedTag);
+					if (logger.isDebugEnabled()) {
+						logger.debug("component contains untaggedTag: " + untaggedTag);
+					}
 					// If we've already seen untagged components, then just add the component to the
 					// existing ArrayList.
 					componentsByTag.get(untaggedTag).add(componentID);
 				} else {
-					System.out.println("component does not contain untaggedTag: " + untaggedTag);
+					if (logger.isDebugEnabled()) {
+						logger.debug("component does not contain untaggedTag: " + untaggedTag);
+					}
 					// If this is the first untagged component we see, then create a new ArrayList,
 					// add the current component, and populate the map's untagged entry with it.
 					ArrayList<String> newComponentList = new ArrayList<String>();
@@ -299,7 +394,9 @@ public class TagAwareScheduler implements IScheduler {
 		// list
 		List<WorkerSlot> availableSlots = new ArrayList<WorkerSlot>();
 		for (SupervisorDetails supervisor : supervisors) {
-			System.out.println("Supervisor for tag[" + tag + "]: " + supervisor);
+			if (logger.isDebugEnabled()) {
+				logger.debug("Supervisor for tag[" + tag + "]: " + supervisor);
+			}
 			availableSlots.addAll(cluster.getAvailableSlots(supervisor));
 		}
 
@@ -385,74 +482,6 @@ public class TagAwareScheduler implements IScheduler {
 
 			// Assign the topology's executors to slots in the cluster's supervisors
 			componentExecutorsToSlotsMap.put(slotToAssign, executorsToAssign);
-		}
-	}
-
-	private void tagAwareSchedule(Topologies topologies, Cluster cluster) {
-		Collection<SupervisorDetails> supervisorDetails = cluster.getSupervisors().values();
-
-		// Get the lists of tagged and unreserved supervisors.
-		Map<String, ArrayList<SupervisorDetails>> supervisorsByTag = getSupervisorsByTag(supervisorDetails);
-
-		for (TopologyDetails topologyDetails : cluster.needsSchedulingTopologies(topologies)) {
-			StormTopology stormTopology = topologyDetails.getTopology();
-			String topologyID = topologyDetails.getId();
-
-			// Get components from topology
-			Map<String, Bolt> bolts = stormTopology.get_bolts();
-			Map<String, SpoutSpec> spouts = stormTopology.get_spouts();
-
-			// Get a map of component to executors
-			Map<String, List<ExecutorDetails>> executorsByComponent = cluster
-					.getNeedsSchedulingComponentToExecutors(topologyDetails);
-
-			// Get a map of tag to components
-			Map<String, ArrayList<String>> componentsByTag = new HashMap<String, ArrayList<String>>();
-			populateComponentsByTag(componentsByTag, bolts);
-			populateComponentsByTag(componentsByTag, spouts);
-			// populateComponentsByTagWithStormInternals(componentsByTag,
-			// executorsByComponent.keySet());
-
-			// Get a map of tag to executors
-			Map<String, ArrayList<ExecutorDetails>> executorsToBeScheduledByTag = getExecutorsToBeScheduledByTag(
-					cluster, topologyDetails, componentsByTag);
-
-			// Initialise a map of slot -> executors
-			Map<WorkerSlot, ArrayList<ExecutorDetails>> componentExecutorsToSlotsMap = (new HashMap<WorkerSlot, ArrayList<ExecutorDetails>>());
-
-			// Time to match everything up!
-			for (Entry<String, ArrayList<ExecutorDetails>> entry : executorsToBeScheduledByTag.entrySet()) {
-				String tag = entry.getKey();
-
-				ArrayList<ExecutorDetails> executorsForTag = entry.getValue();
-				System.out.println("tag: " + tag);
-				ArrayList<SupervisorDetails> supervisorsForTag = supervisorsByTag.get(tag);
-				ArrayList<String> componentsForTag = componentsByTag.get(tag);
-
-				try {
-					populateComponentExecutorsToSlotsMap(componentExecutorsToSlotsMap, cluster, topologyDetails,
-							supervisorsForTag, executorsForTag, componentsForTag, tag);
-				} catch (Exception e) {
-					e.printStackTrace();
-
-					// Cut this scheduling short to avoid partial scheduling.
-					return;
-				}
-			}
-
-			// Do the actual assigning We do this as a separate step to only perform any
-			// assigning if there have been no issues so far. That's aimed at avoiding
-			// partial scheduling from occurring, with some components already scheduled and
-			// alive, while others cannot be scheduled.
-			for (Entry<WorkerSlot, ArrayList<ExecutorDetails>> entry : componentExecutorsToSlotsMap.entrySet()) {
-				WorkerSlot slotToAssign = entry.getKey();
-				ArrayList<ExecutorDetails> executorsToAssign = entry.getValue();
-
-				cluster.assign(slotToAssign, topologyID, executorsToAssign);
-			}
-
-			// If we've reached this far, then scheduling must have been successful
-			cluster.setStatus(topologyID, "SCHEDULING SUCCESSFUL");
 		}
 	}
 }

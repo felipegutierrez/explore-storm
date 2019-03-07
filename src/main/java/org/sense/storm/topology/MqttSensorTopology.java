@@ -1,5 +1,6 @@
 package org.sense.storm.topology;
 
+import org.apache.log4j.Logger;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.StormSubmitter;
@@ -10,6 +11,8 @@ import org.sense.storm.bolt.SensorPrintBolt;
 import org.sense.storm.spout.MqttSensorSpout;
 
 public class MqttSensorTopology {
+
+	final static Logger logger = Logger.getLogger(MqttSensorTopology.class);
 
 	private static final String SPOUT_STATION_01 = "spout-station-01";
 	private static final String SPOUT_STATION_02 = "spout-station-02";
@@ -41,11 +44,11 @@ public class MqttSensorTopology {
 		// @formatter:on
 
 		if (msg != null && msg.equalsIgnoreCase("CLUSTER")) {
-			System.out.println("Running on the cluster");
+			logger.info("Running on the cluster");
 			config.setNumWorkers(1);
 			StormSubmitter.submitTopologyWithProgressBar("MqttSensorAnalyserStorm", config, builder.createTopology());
 		} else {
-			System.out.println("Running on local machine");
+			logger.info("Running on local machine");
 			// execute the topology
 			LocalCluster cluster = new LocalCluster();
 			cluster.submitTopology("MqttSensorAnalyserStorm", config, builder.createTopology());

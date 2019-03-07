@@ -2,6 +2,7 @@ package org.sense.storm.bolt;
 
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
@@ -11,6 +12,8 @@ import org.apache.storm.tuple.Tuple;
 import org.apache.storm.tuple.Values;
 
 public class SensorMapperBolt extends BaseRichBolt {
+
+	final static Logger logger = Logger.getLogger(SensorMapperBolt.class);
 
 	private static final long serialVersionUID = -6408993991316811358L;
 
@@ -36,32 +39,44 @@ public class SensorMapperBolt extends BaseRichBolt {
 		try {
 			sensorId = Integer.parseInt(arr[0]);
 		} catch (NumberFormatException re) {
-			System.err.println("Error converting arr0.");
+			if (logger.isDebugEnabled()) {
+				logger.debug("Error converting arr0.");
+			}
 		}
 		try {
 			sensorType = String.valueOf(arr[1]);
 		} catch (ClassCastException re) {
-			System.err.println("Error converting arr1.");
+			if (logger.isDebugEnabled()) {
+				logger.debug("Error converting arr1.");
+			}
 		}
 		try {
 			platformId = Integer.parseInt(arr[2]);
 		} catch (NumberFormatException re) {
-			System.err.println("Error converting arr2.");
+			if (logger.isDebugEnabled()) {
+				logger.debug("Error converting arr2.");
+			}
 		}
 		try {
 			platformType = String.valueOf(arr[3]);
 		} catch (ClassCastException re) {
-			System.err.println("Error converting arr3.");
+			if (logger.isDebugEnabled()) {
+				logger.debug("Error converting arr3.");
+			}
 		}
 		try {
 			stationId = Integer.parseInt(arr[4]);
 		} catch (NumberFormatException re) {
-			System.err.println("Error converting arr4.");
+			if (logger.isDebugEnabled()) {
+				logger.debug("Error converting arr4.");
+			}
 		}
 		try {
 			value = Double.parseDouble(arr[5]);
 		} catch (NumberFormatException re) {
-			System.err.println("Error converting arr5.");
+			if (logger.isDebugEnabled()) {
+				logger.debug("Error converting arr5.");
+			}
 		}
 
 		collector.emit(new Values(sensorId, sensorType, platformId, platformType, stationId, value));
