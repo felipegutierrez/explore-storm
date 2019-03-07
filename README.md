@@ -88,10 +88,11 @@ And restart all the storm services on the cluster
 
 
 ## References
-[Taking control of your Apache Storm cluster with tag-aware scheduling](https://inside.edited.com/taking-control-of-your-apache-storm-cluster-with-tag-aware-scheduling-b60aaaa5e37e)
-[Metadata-Aware Scheduler for Apache Storm](https://dcvan24.wordpress.com/2015/04/07/metadata-aware-custom-scheduler-in-storm/)
-[Setting up a single node Apache Storm cluster](https://medium.com/real-time-streaming/setting-up-a-single-node-apache-storm-cluster-3dda02add2e9)
-[5 minutes Storm installation guide (single-node setup)](https://vincenzogulisano.com/2015/07/30/5-minutes-storm-installation-guide-single-node-setup/)
+
+- [Taking control of your Apache Storm cluster with tag-aware scheduling](https://inside.edited.com/taking-control-of-your-apache-storm-cluster-with-tag-aware-scheduling-b60aaaa5e37e)
+- [Metadata-Aware Scheduler for Apache Storm](https://dcvan24.wordpress.com/2015/04/07/metadata-aware-custom-scheduler-in-storm/)
+- [Setting up a single node Apache Storm cluster](https://medium.com/real-time-streaming/setting-up-a-single-node-apache-storm-cluster-3dda02add2e9)
+- [5 minutes Storm installation guide (single-node setup)](https://vincenzogulisano.com/2015/07/30/5-minutes-storm-installation-guide-single-node-setup/)
 
 
 
