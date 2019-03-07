@@ -93,6 +93,7 @@ And restart all the storm services on the cluster
 - [Metadata-Aware Scheduler for Apache Storm](https://dcvan24.wordpress.com/2015/04/07/metadata-aware-custom-scheduler-in-storm/)
 - [Setting up a single node Apache Storm cluster](https://medium.com/real-time-streaming/setting-up-a-single-node-apache-storm-cluster-3dda02add2e9)
 - [5 minutes Storm installation guide (single-node setup)](https://vincenzogulisano.com/2015/07/30/5-minutes-storm-installation-guide-single-node-setup/)
+- [Understanding the Parallelism of a Storm Topology](https://www.michael-noll.com/blog/2012/10/16/understanding-the-parallelism-of-a-storm-topology/)
 
 
 

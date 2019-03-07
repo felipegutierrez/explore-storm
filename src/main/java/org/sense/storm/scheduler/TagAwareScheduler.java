@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -15,7 +16,6 @@ import org.apache.log4j.Logger;
 import org.apache.storm.generated.Bolt;
 import org.apache.storm.generated.ComponentCommon;
 import org.apache.storm.generated.SpoutSpec;
-import org.apache.storm.generated.StormTopology;
 import org.apache.storm.scheduler.Cluster;
 import org.apache.storm.scheduler.ExecutorDetails;
 import org.apache.storm.scheduler.IScheduler;
@@ -47,29 +47,41 @@ public class TagAwareScheduler implements IScheduler {
 	}
 
 	private void tagAwareSchedule(Topologies topologies, Cluster cluster) {
-		Collection<SupervisorDetails> supervisorDetails = cluster.getSupervisors().values();
 
+		Collection<SupervisorDetails> supervisorDetails = cluster.getSupervisors().values();
 		// Get the lists of tagged and unreserved supervisors.
 		Map<String, ArrayList<SupervisorDetails>> supervisorsByTag = getSupervisorsByTag(supervisorDetails);
 
-		for (TopologyDetails topologyDetails : cluster.needsSchedulingTopologies(topologies)) {
-			StormTopology stormTopology = topologyDetails.getTopology();
+		for (Map.Entry<String, ArrayList<SupervisorDetails>> entry : supervisorsByTag.entrySet()) {
+			List<SupervisorDetails> values = (ArrayList<SupervisorDetails>) entry.getValue();
+			for (Iterator<SupervisorDetails> iterator = values.iterator(); iterator.hasNext();) {
+				SupervisorDetails details = (SupervisorDetails) iterator.next();
+				logger.info(entry.getKey() + " Id: " + details.getId() + " Host: " + details.getHost() + " TotalCPU: "
+						+ details.getTotalCPU() + " TotalMemory: " + details.getTotalMemory() + " SchedulerMeta: "
+						+ details.getSchedulerMeta());
+			}
+		}
+
+		// Get the topologies to be scheduled and iterate over them
+		List<TopologyDetails> topologiesToBeSchedule = cluster.needsSchedulingTopologies(topologies);
+		for (TopologyDetails topologyDetails : topologiesToBeSchedule) {
+
+			// Get topology properties, Bolts, and Spouts
 			String topologyID = topologyDetails.getId();
+			Map<String, Bolt> bolts = topologyDetails.getTopology().get_bolts();
+			Map<String, SpoutSpec> spouts = topologyDetails.getTopology().get_spouts();
 
-			// Get components from topology
-			Map<String, Bolt> bolts = stormTopology.get_bolts();
-			Map<String, SpoutSpec> spouts = stormTopology.get_spouts();
-
-			// Get a map of component to executors
+			// Get a map of (component-id -> executors) which needs scheduling in this
+			// topology.
 			Map<String, List<ExecutorDetails>> executorsByComponent = cluster
 					.getNeedsSchedulingComponentToExecutors(topologyDetails);
 
-			// Get a map of tag to components
+			// Create and populate a map of (tag -> components) which needs scheduling in
+			// this topology
 			Map<String, ArrayList<String>> componentsByTag = new HashMap<String, ArrayList<String>>();
 			populateComponentsByTag(componentsByTag, bolts);
 			populateComponentsByTag(componentsByTag, spouts);
-			// populateComponentsByTagWithStormInternals(componentsByTag,
-			// executorsByComponent.keySet());
+			// populateComponentsByTagWithStormInternals(componentsByTag,executorsByComponent.keySet());
 
 			// Get a map of tag to executors
 			Map<String, ArrayList<ExecutorDetails>> executorsToBeScheduledByTag = getExecutorsToBeScheduledByTag(
@@ -116,10 +128,18 @@ public class TagAwareScheduler implements IScheduler {
 		}
 	}
 
+	/**
+	 * get a Map of all supervisors available on the cluster. Once the file
+	 * "conf/storm.yaml" has been configured with the tag "storm.scheduler" for the
+	 * extendable Scheduler and the tag "supervisor.scheduler.meta" which defines
+	 * the metadata for each supervisor ,the method getSchedulerMeta() reads the
+	 * metadata for each supervisor in order to schedule the topology over them.
+	 * 
+	 * @param supervisorDetails
+	 * @return
+	 */
 	private Map<String, ArrayList<SupervisorDetails>> getSupervisorsByTag(
 			Collection<SupervisorDetails> supervisorDetails) {
-		// A map of tag -> supervisors, to help with scheduling of components with
-		// specific tags
 		Map<String, ArrayList<SupervisorDetails>> supervisorsByTag = new HashMap<String, ArrayList<SupervisorDetails>>();
 
 		for (SupervisorDetails supervisor : supervisorDetails) {
@@ -174,6 +194,11 @@ public class TagAwareScheduler implements IScheduler {
 		return supervisorsByTag;
 	}
 
+	/**
+	 * 
+	 * @param componentsByTag
+	 * @param components
+	 */
 	private <T> void populateComponentsByTag(Map<String, ArrayList<String>> componentsByTag,
 			Map<String, T> components) {
 		// Type T can be either Bolt or SpoutSpec, so that this logic can be reused for
@@ -301,26 +326,24 @@ public class TagAwareScheduler implements IScheduler {
 
 	private Map<String, ArrayList<ExecutorDetails>> getExecutorsToBeScheduledByTag(Cluster cluster,
 			TopologyDetails topologyDetails, Map<String, ArrayList<String>> componentsPerTag) {
-		// Initialise the return value
+		// This is the list of executors (tag -> executors). A executor is a thread that
+		// runs inside the Worker Process.
 		Map<String, ArrayList<ExecutorDetails>> executorsByTag = new HashMap<String, ArrayList<ExecutorDetails>>();
 
 		// Find which topology executors are already assigned
 		Set<ExecutorDetails> aliveExecutors = getAliveExecutors(cluster, topologyDetails);
 
-		// Get a map of component to executors for the topology that need scheduling
+		// Get a map of (component-id -> executors) which needs scheduling
 		Map<String, List<ExecutorDetails>> executorsByComponent = cluster
 				.getNeedsSchedulingComponentToExecutors(topologyDetails);
 
-		// Loop through componentsPerTag to populate the map
-		for (Entry<String, ArrayList<String>> entry : componentsPerTag.entrySet()) {
-			String tag = entry.getKey();
-			ArrayList<String> componentIDs = entry.getValue();
-
-			// Initialize the map entry for the current tag
+		// Iterate over the componentsPerTag created before in order to populate the
+		// executorsByTag
+		for (Entry<String, ArrayList<String>> tagComponent : componentsPerTag.entrySet()) {
+			String tag = tagComponent.getKey();
 			ArrayList<ExecutorDetails> executorsForTag = new ArrayList<ExecutorDetails>();
 
-			// Loop through this tag's component IDs
-			for (String componentID : componentIDs) {
+			for (String componentID : tagComponent.getValue()) {
 				// Fetch the executors for the current component ID
 				List<ExecutorDetails> executorsForComponent = executorsByComponent.get(componentID);
 
@@ -337,7 +360,9 @@ public class TagAwareScheduler implements IScheduler {
 
 				// Add the component's waiting to be assigned executors to the current tag
 				// executors
-				executorsForTag.addAll(executorsToAssignForComponent);
+				if (!executorsToAssignForComponent.isEmpty()) {
+					executorsForTag.addAll(executorsToAssignForComponent);
+				}
 			}
 
 			// Populate the map of executors by tag after looping through all of the tag's
@@ -346,7 +371,6 @@ public class TagAwareScheduler implements IScheduler {
 				executorsByTag.put(tag, executorsForTag);
 			}
 		}
-
 		return executorsByTag;
 	}
 

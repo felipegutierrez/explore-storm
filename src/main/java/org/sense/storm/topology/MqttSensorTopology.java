@@ -36,7 +36,7 @@ public class MqttSensorTopology {
 		// Bolts
 		builder.setBolt(BOLT_CREATE_SENSOR, new SensorMapperBolt())
 				.shuffleGrouping(SPOUT_STATION_01)
-				// .shuffleGrouping(SPOUT_STATION_02)
+				.shuffleGrouping(SPOUT_STATION_02)
 				.addConfiguration("tags", "GPU");
 		builder.setBolt(BOLT_SENSOR_PRINT, new SensorPrintBolt())
 				.fieldsGrouping(BOLT_CREATE_SENSOR, new Fields("value"))

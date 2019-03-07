@@ -13,6 +13,10 @@ public class App {
 		try {
 			int app = 0;
 			do {
+				logger.debug("debuuuuuug");
+				if (logger.isDebugEnabled()) {
+					System.out.println("debug");
+				}
 				// @formatter:off
 				logger.info("0  - exit");
 				logger.info("1  - reading from station sensors ");
