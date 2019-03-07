@@ -44,7 +44,12 @@ Start supervisor `apache-storm-1.2.2/bin/storm supervisor`
 
 Start UI `apache-storm-0.9.5/bin/storm ui`
 
-Connect to http://127.0.0.1:8080 .
+Connect to http://127.0.0.1:8080 . During initializing all the services it is a good idea monitor the log files for each one of them.
+```
+tail -f apache-storm-1.2.2/logs/nimbus.log
+tail -f apache-storm-1.2.2/logs/supervisor.log
+tail -f apache-storm-1.2.2/logs/ui.log
+```
 
 ## Running a Topology
 
@@ -69,6 +74,19 @@ If an error occuors in the topology you may want to fix the error and re-deploy 
 ```
 storm kill MqttSensorAnalyserStorm [-w wait-time-secs]
 ```
+
+## Adding an extendable scheduler on Storm
+
+To add an extendable scheduler on Storm you have to implement the `IScheduler` interface. This project has an example on the file [TagAwareScheduler.java](https://github.com/felipegutierrez/explore-storm/blob/master/src/main/java/org/sense/storm/scheduler/TagAwareScheduler.java). Then, you have to add the following lines on the file `apache-storm-1.2.2/conf/storm.yaml`:
+```
+supervisor.scheduler.meta:
+    tags: GPU
+storm.scheduler: "org.sense.storm.scheduler.TagAwareScheduler"
+```
+And restart all the storm services on the cluster
+
+
+
 
 
 

@@ -7,7 +7,6 @@ import org.apache.storm.topology.TopologyBuilder;
 import org.apache.storm.tuple.Fields;
 import org.sense.storm.bolt.SensorMapperBolt;
 import org.sense.storm.bolt.SensorPrintBolt;
-import org.sense.storm.scheduler.MqttSensorScheduler;
 import org.sense.storm.spout.MqttSensorSpout;
 
 public class MqttSensorTopology {
@@ -27,23 +26,23 @@ public class MqttSensorTopology {
 		// @formatter:off
 		// Spouts
 		builder.setSpout(SPOUT_STATION_01, new MqttSensorSpout("topic-station-01"))
-				.addConfiguration(MqttSensorScheduler.SCHEDULER_EDGE, 1);
+				.addConfiguration("tags", "GPU");
 		builder.setSpout(SPOUT_STATION_02, new MqttSensorSpout("topic-station-02"))
-				.addConfiguration(MqttSensorScheduler.SCHEDULER_EDGE, 1);
+				.addConfiguration("tags", "GPU");
 
 		// Bolts
 		builder.setBolt(BOLT_CREATE_SENSOR, new SensorMapperBolt())
 				.shuffleGrouping(SPOUT_STATION_01)
-				.shuffleGrouping(SPOUT_STATION_02)
-				.addConfiguration(MqttSensorScheduler.SCHEDULER_EDGE, 1);
+				// .shuffleGrouping(SPOUT_STATION_02)
+				.addConfiguration("tags", "GPU");
 		builder.setBolt(BOLT_SENSOR_PRINT, new SensorPrintBolt())
 				.fieldsGrouping(BOLT_CREATE_SENSOR, new Fields("value"))
-				.addConfiguration(MqttSensorScheduler.SCHEDULER_CLUSTER, 2);
+				.addConfiguration("tags", "GPU");
 		// @formatter:on
 
 		if (msg != null && msg.equalsIgnoreCase("CLUSTER")) {
 			System.out.println("Running on the cluster");
-			config.setNumWorkers(3);
+			config.setNumWorkers(1);
 			StormSubmitter.submitTopologyWithProgressBar("MqttSensorAnalyserStorm", config, builder.createTopology());
 		} else {
 			System.out.println("Running on local machine");
