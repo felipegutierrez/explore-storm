@@ -7,7 +7,7 @@ import org.apache.storm.StormSubmitter;
 import org.apache.storm.topology.TopologyBuilder;
 import org.apache.storm.tuple.Fields;
 import org.sense.storm.bolt.SensorMapperBolt;
-import org.sense.storm.bolt.SensorPrintBolt;
+import org.sense.storm.bolt.SensorPrinterBolt;
 import org.sense.storm.spout.MqttSensorSpout;
 
 public class MqttSensorTopology {
@@ -38,7 +38,7 @@ public class MqttSensorTopology {
 				.shuffleGrouping(SPOUT_STATION_01)
 				.shuffleGrouping(SPOUT_STATION_02)
 				.addConfiguration("tags", "GPU");
-		builder.setBolt(BOLT_SENSOR_PRINT, new SensorPrintBolt())
+		builder.setBolt(BOLT_SENSOR_PRINT, new SensorPrinterBolt())
 				.fieldsGrouping(BOLT_CREATE_SENSOR, new Fields("value"))
 				.addConfiguration("tags", "GPU");
 		// @formatter:on

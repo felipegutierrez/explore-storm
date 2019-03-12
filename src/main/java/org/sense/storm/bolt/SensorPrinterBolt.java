@@ -12,11 +12,11 @@ import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.base.BaseRichBolt;
 import org.apache.storm.tuple.Tuple;
 
-public class SensorPrintBolt extends BaseRichBolt {
-
-	final static Logger logger = Logger.getLogger(SensorPrintBolt.class);
+public class SensorPrinterBolt extends BaseRichBolt {
 
 	private static final long serialVersionUID = 7146201246991885765L;
+
+	final static Logger logger = Logger.getLogger(SensorPrinterBolt.class);
 
 	private Integer id;
 	private String name;
@@ -31,19 +31,50 @@ public class SensorPrintBolt extends BaseRichBolt {
 	}
 
 	public void execute(Tuple input) {
-		Integer sensorId = input.getInteger(0);
-		String sensorType = input.getString(1);
-		Integer platformId = input.getInteger(2);
-		String platformType = input.getString(3);
-		Integer stationId = input.getInteger(4);
-		Double value = input.getDouble(5);
+		Integer sensorId = null;
+		String sensorType = null;
+		Integer platformId = null;
+		String platformType = null;
+		Integer stationId = null;
+		Double value = null;
+
+		try {
+			sensorId = input.getInteger(0);
+		} catch (NumberFormatException re) {
+			System.err.println("Error converting sensorId.");
+		}
+		try {
+			sensorType = input.getString(1);
+		} catch (ClassCastException re) {
+			System.err.println("Error converting sensorType.");
+		}
+		try {
+			platformId = input.getInteger(2);
+		} catch (NumberFormatException re) {
+			System.err.println("Error converting platformId.");
+		}
+		try {
+			platformType = input.getString(3);
+		} catch (ClassCastException re) {
+			System.err.println("Error converting platformType.");
+		}
+		try {
+			stationId = input.getInteger(4);
+		} catch (NumberFormatException re) {
+			System.err.println("Error converting stationId.");
+		}
+		try {
+			value = input.getDouble(5);
+		} catch (NumberFormatException re) {
+			System.err.println("Error converting value.");
+		}
 
 		result.add(input.toString());
 
 		collector.ack(input);
 		// print here or wait until the application finishes to execute the cleanup()
 		// method
-		String result = "Bolt sink: sensorId[" + sensorId + "] sensorType[" + sensorType + "] platformId[" + platformId
+		String result = "sensorId[" + sensorId + "] sensorType[" + sensorType + "] platformId[" + platformId
 				+ "] platformType[" + platformType + "] stationId[" + stationId + "] value[" + value + "]";
 		logger.info(result);
 	}
