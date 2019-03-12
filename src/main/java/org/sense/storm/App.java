@@ -4,6 +4,7 @@ import java.util.Scanner;
 
 import org.apache.log4j.Logger;
 import org.sense.storm.topology.MqttSensorJoinTopology;
+import org.sense.storm.topology.MqttSensorSumTopology;
 import org.sense.storm.topology.MqttSensorTopology;
 
 public class App {
@@ -21,7 +22,8 @@ public class App {
 				// @formatter:off
 				logger.info("0  - exit");
 				logger.info("1  - reading from train station sensors ");
-				logger.info("2  - reading multiple data stream sensors from train station topics");
+				logger.info("2  - reading multiple data stream sensors from train station topics and performing a JOIN operation");
+				logger.info("3  - reading multiple data stream sensors from train station topics and performing an AGGREGATE operation");
 				// @formatter:on
 
 				String msg = "0";
@@ -58,6 +60,15 @@ public class App {
 					// @formatter:on
 					msg = (new Scanner(System.in)).nextLine();
 					new MqttSensorJoinTopology(msg);
+					app = 0;
+					break;
+				case 3:
+					// @formatter:off
+					logger.info("Application 3 selected");
+					logger.info("Please enter [cluster] or [local] to specify where you want to run your application: ");
+					// @formatter:on
+					msg = (new Scanner(System.in)).nextLine();
+					new MqttSensorSumTopology(msg);
 					app = 0;
 					break;
 				default:
