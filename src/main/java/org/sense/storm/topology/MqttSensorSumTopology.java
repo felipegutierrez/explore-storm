@@ -26,12 +26,27 @@ public class MqttSensorSumTopology {
 	private static final String BOLT_SENSOR_PRINT = "bolt-sensor-print";
 
 	public MqttSensorSumTopology(String msg) throws Exception {
+
 		// Create Config instance for cluster configuration
 		Config config = new Config();
 		config.setDebug(false);
 		config.setNumWorkers(1);
 
-		TopologyBuilder builder = new TopologyBuilder();
+		// The memory limit a worker process will be allocated in megabytes
+		// config.setTopologyWorkerMaxHeapSize(512.0);
+
+		// Profiling Resource Usage: Log all storm metrics
+		// This piece of code is commented because it is throwing the error:
+		// java.lang.UnsatisfiedLinkError: org.hyperic.sigar.Sigar.getPid()
+		/**
+		 * config.registerMetricsConsumer(LoggingMetricsConsumer.class);
+		 * Map<String,String> workerMetrics = new HashMap<String, String>();
+		 * workerMetrics.put("CPU", "org.apache.storm.metrics.sigar.CPUMetric");
+		 * config.put(Config.TOPOLOGY_WORKER_METRICS, workerMetrics);
+		 */
+
+		// Data stream topology
+		TopologyBuilder topologyBuilder = new TopologyBuilder();
 
 		// @formatter:off
 		// Fields
@@ -43,25 +58,33 @@ public class MqttSensorSumTopology {
 				MqttSensorDetailSpout.FIELD_VALUE);
 
 		// Spouts: data stream from count ticket and count train sensors
-		builder.setSpout(MqttSensorDetailSpout.SPOUT_STATION_01_TICKETS, new MqttSensorDetailSpout(TOPIC_STATION_01_TICKETS, fields));
+		topologyBuilder.setSpout(MqttSensorDetailSpout.SPOUT_STATION_01_TICKETS, new MqttSensorDetailSpout(TOPIC_STATION_01_TICKETS, fields))
+				.setMemoryLoad(512.0)
+				.setCPULoad(100.0);
 		// builder.setSpout(MqttSensorDetailSpout.SPOUT_STATION_01_TRAINS, new MqttSensorDetailSpout(TOPIC_STATION_01_TRAINS, fields));
 
-		// @formatter:on
-		builder.setBolt(BOLT_SENSOR_TICKET_SUM, new SumTicketWindowBolt().withTumblingWindow(Duration.seconds(5)), 1)
-				.shuffleGrouping(MqttSensorDetailSpout.SPOUT_STATION_01_TICKETS);
+		topologyBuilder.setBolt(BOLT_SENSOR_TICKET_SUM, new SumTicketWindowBolt().withTumblingWindow(Duration.seconds(5)), 1)
+				.shuffleGrouping(MqttSensorDetailSpout.SPOUT_STATION_01_TICKETS)
+				.setMemoryLoad(512.0)
+				.setCPULoad(10.0);
 
 		// Printer Bolt
-		builder.setBolt(BOLT_SENSOR_PRINT, new PrinterBolt(), 1).shuffleGrouping(BOLT_SENSOR_TICKET_SUM);
+		topologyBuilder.setBolt(BOLT_SENSOR_PRINT, new PrinterBolt(), 1)
+				.shuffleGrouping(BOLT_SENSOR_TICKET_SUM)
+				.setMemoryLoad(512.0)
+				.setCPULoad(10.0);
+		// @formatter:on
 
 		if (msg != null && msg.equalsIgnoreCase("CLUSTER")) {
 			logger.info("Running on the cluster");
 			config.setNumWorkers(1);
-			StormSubmitter.submitTopologyWithProgressBar("MqttSensorSumTopology", config, builder.createTopology());
+			StormSubmitter.submitTopologyWithProgressBar("MqttSensorSumTopology", config,
+					topologyBuilder.createTopology());
 		} else {
 			logger.info("Running on local machine");
 			// execute the topology
 			LocalCluster cluster = new LocalCluster();
-			cluster.submitTopology("MqttSensorSumTopology", config, builder.createTopology());
+			cluster.submitTopology("MqttSensorSumTopology", config, topologyBuilder.createTopology());
 			Thread.sleep(60000);
 
 			// Stop the topology

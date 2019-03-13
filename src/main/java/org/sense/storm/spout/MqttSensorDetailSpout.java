@@ -18,9 +18,8 @@ import org.fusesource.mqtt.client.Topic;
 
 public class MqttSensorDetailSpout extends BaseRichSpout {
 
-	private static final long serialVersionUID = 27262073917747566L;
-
 	final static Logger logger = Logger.getLogger(MqttSensorDetailSpout.class);
+	private static final long serialVersionUID = 27262073917747566L;
 
 	// Create instance for TopologyContext which contains topology data.
 	private TopologyContext context;
@@ -104,13 +103,9 @@ public class MqttSensorDetailSpout extends BaseRichSpout {
 	}
 
 	public void activate() {
-		// TODO Auto-generated method stub
-
 	}
 
 	public void deactivate() {
-		// TODO Auto-generated method stub
-
 	}
 
 	public void nextTuple() {
@@ -118,10 +113,7 @@ public class MqttSensorDetailSpout extends BaseRichSpout {
 			while (blockingConnection.isConnected()) {
 				Message message = blockingConnection.receive();
 				String payload = new String(message.getPayload());
-
-				if (logger.isDebugEnabled()) {
-					logger.info("message[" + topic + "]: " + payload);
-				}
+				logger.debug("message[" + topic + "]: " + payload);
 
 				message.ack();
 
@@ -134,59 +126,53 @@ public class MqttSensorDetailSpout extends BaseRichSpout {
 				Double value = 0.0;
 				try {
 					sensorId = Integer.parseInt(arr[0]);
-				} catch (NumberFormatException re) {
-					System.err.println("Error converting arr0.");
+				} catch (ClassCastException re) {
+					logger.error("Error converting sensorId.", re.getCause());
 				}
 				try {
 					sensorType = String.valueOf(arr[1]);
 				} catch (ClassCastException re) {
-					System.err.println("Error converting arr1.");
+					logger.error("Error converting sensorType.", re.getCause());
 				}
 				try {
 					platformId = Integer.parseInt(arr[2]);
-				} catch (NumberFormatException re) {
-					System.err.println("Error converting arr2.");
+				} catch (ClassCastException re) {
+					logger.error("Error converting platformId.", re.getCause());
 				}
 				try {
 					platformType = String.valueOf(arr[3]);
 				} catch (ClassCastException re) {
-					System.err.println("Error converting arr3.");
+					logger.error("Error converting platformType.", re.getCause());
 				}
 				try {
 					stationId = Integer.parseInt(arr[4]);
-				} catch (NumberFormatException re) {
-					System.err.println("Error converting arr3.");
+				} catch (ClassCastException re) {
+					logger.error("Error converting stationId.", re.getCause());
 				}
 				try {
 					value = Double.parseDouble(arr[5]);
-				} catch (NumberFormatException re) {
-					System.err.println("Error converting arr5.");
+				} catch (ClassCastException re) {
+					logger.error("Error converting value.", re.getCause());
 				}
 				collector.emit(new Values(sensorId, sensorType, platformId, platformType, stationId, value));
 			}
 		} catch (Exception e) {
+			logger.error("Error: ", e.getCause());
 			e.printStackTrace();
 		}
 	}
 
 	public void ack(Object msgId) {
-		// TODO Auto-generated method stub
-
 	}
 
 	public void fail(Object msgId) {
-		// TODO Auto-generated method stub
-
 	}
 
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		// declarer.declare(new Fields("topic", "sensorId", "sensorType", "platformId",
-		// "platformType", "stationId", "value"));
 		declarer.declare(outFields);
 	}
 
 	public Map<String, Object> getComponentConfiguration() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 }

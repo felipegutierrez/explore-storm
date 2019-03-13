@@ -42,7 +42,7 @@ Start nimbus `apache-storm-1.2.2/bin/storm nimbus`
 
 Start supervisor `apache-storm-1.2.2/bin/storm supervisor`
 
-Start UI `apache-storm-0.9.5/bin/storm ui`
+Start UI `apache-storm-1.2.2/bin/storm ui`
 
 Connect to http://127.0.0.1:8080 . During initializing all the services it is a good idea monitor the log files for each one of them.
 ```
@@ -57,7 +57,8 @@ Export the project as a Jar file using Eclipse IDE: `Right button on the project
 
 Copy libraries to the Storm lib path
 ```
-cp -Rf explore-storm_lib/hawtdispatch-transport-1.22.jar explore-storm_lib/hawtdispatch-1.22.jar explore-storm_lib/hawtbuf-1.11.jar apache-storm-1.2.2/lib/
+cd eclipse-workspace/target/explore-storm_lib/
+cp -Rf hawtdispatch-transport-1.22.jar hawtdispatch-1.22.jar hawtbuf-1.11.jar sigar-1.6.4.jar ../../Server/storm/datadir/storm/apache-storm-1.2.2/lib/
 ```
 Deploy the topology on the cluster. The program will ask which application you want to run and if you want to deploy on the cluster (type CLUSTER) or run locally (type LOCAL).
 ```
@@ -72,6 +73,20 @@ If an error occuors in the topology you may want to fix the error and re-deploy 
 ```
 storm kill MqttSensorAnalyserStorm [-w wait-time-secs]
 ```
+
+## Using the ResourceAwareScheduler (RAS) from Storm
+
+This is the reference of the [Resource Aware Scheduler](http://storm.apache.org/releases/1.2.2/Resource_Aware_Scheduler_overview.html) in Storm.
+
+Update the `storm.yaml` file with the RAS class. Set the amount of memory for the workers. 
+
+```
+storm.scheduler: "org.apache.storm.scheduler.resource.ResourceAwareScheduler"
+# default value for the max heap size for a worker
+topology.worker.max.heap.size.mb: 2048.0
+```
+
+Make sure that the sum of all memory set on the method `setMemoryLoad()` does not exceed the amount of memory set on `topology.worker.max.heap.size.mb`.
 
 ## Adding an extendable scheduler on Storm
 
@@ -94,6 +109,8 @@ And restart all the storm services on the cluster
 - [Setting up a single node Apache Storm cluster](https://medium.com/real-time-streaming/setting-up-a-single-node-apache-storm-cluster-3dda02add2e9)
 - [5 minutes Storm installation guide (single-node setup)](https://vincenzogulisano.com/2015/07/30/5-minutes-storm-installation-guide-single-node-setup/)
 - [Understanding the Parallelism of a Storm Topology](https://www.michael-noll.com/blog/2012/10/16/understanding-the-parallelism-of-a-storm-topology/)
+- [Resource Aware Scheduler](http://storm.apache.org/releases/1.2.2/Resource_Aware_Scheduler_overview.html)
+
 
 
 

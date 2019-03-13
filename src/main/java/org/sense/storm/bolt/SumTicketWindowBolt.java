@@ -34,7 +34,7 @@ public class SumTicketWindowBolt extends BaseWindowedBolt {
 			try {
 				value = tuple.getDouble(5);
 			} catch (ClassCastException re) {
-				System.err.println("Error converting value.");
+				logger.error("Error converting value.", re.getCause());
 			}
 			if (value != null) {
 				computedValue = computedValue + value;

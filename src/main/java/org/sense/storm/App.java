@@ -15,39 +15,35 @@ public class App {
 		try {
 			int app = 0;
 			do {
-				logger.debug("debuuuuuug");
-				if (logger.isDebugEnabled()) {
-					System.out.println("debug");
-				}
 				// @formatter:off
-				logger.info("0  - exit");
-				logger.info("1  - reading from train station sensors ");
-				logger.info("2  - reading multiple data stream sensors from train station topics and performing a JOIN operation");
-				logger.info("3  - reading multiple data stream sensors from train station topics and performing an AGGREGATE operation");
+				System.out.println("0  - exit");
+				System.out.println("1  - reading from train station sensors ");
+				System.out.println("2  - reading multiple data stream sensors from train station topics and performing a JOIN operation");
+				System.out.println("3  - reading multiple data stream sensors from train station topics and performing an AGGREGATE operation");
 				// @formatter:on
 
 				String msg = "0";
 				if (args != null && args.length > 0) {
 					msg = args[0];
 					if (msg.matches("-?\\d+")) {
-						logger.info("    Application choosed: " + msg);
+						System.out.println("    Application choosed: " + msg);
 					} else {
 						msg = "999";
 					}
 				} else {
-					logger.info("    Please enter which application you want to run: ");
+					System.out.print("    Please enter which application you want to run: ");
 					msg = (new Scanner(System.in)).nextLine();
 				}
 
 				app = Integer.valueOf(msg);
 				switch (app) {
 				case 0:
-					logger.info("bis später");
+					System.out.println("bis später");
 					break;
 				case 1:
 					// @formatter:off
-					logger.info("Application 1 selected");
-					logger.info("Please enter [cluster] or [local] to specify where you want to run your application: ");
+					System.out.println("Application 1 selected");
+					System.out.print("Please enter [cluster] or [local] to specify where you want to run your application: ");
 					// @formatter:on
 					msg = (new Scanner(System.in)).nextLine();
 					new MqttSensorTopology(msg);
@@ -55,8 +51,8 @@ public class App {
 					break;
 				case 2:
 					// @formatter:off
-					logger.info("Application 2 selected");
-					logger.info("Please enter [cluster] or [local] to specify where you want to run your application: ");
+					System.out.println("Application 2 selected");
+					System.out.print("Please enter [cluster] or [local] to specify where you want to run your application: ");
 					// @formatter:on
 					msg = (new Scanner(System.in)).nextLine();
 					new MqttSensorJoinTopology(msg);
@@ -64,8 +60,8 @@ public class App {
 					break;
 				case 3:
 					// @formatter:off
-					logger.info("Application 3 selected");
-					logger.info("Please enter [cluster] or [local] to specify where you want to run your application: ");
+					System.out.println("Application 3 selected");
+					System.out.print("Please enter [cluster] or [local] to specify where you want to run your application: ");
 					// @formatter:on
 					msg = (new Scanner(System.in)).nextLine();
 					new MqttSensorSumTopology(msg);
@@ -73,13 +69,12 @@ public class App {
 					break;
 				default:
 					args = null;
-					logger.info("No application selected [" + app + "] ");
+					System.out.println("No application selected [" + app + "] ");
 					break;
 				}
 			} while (app != 0);
 		} catch (Exception ce) {
-			System.err.println(ce.getMessage());
-			ce.printStackTrace();
+			logger.error(ce.getMessage(), ce.getCause());
 		}
 	}
 }
