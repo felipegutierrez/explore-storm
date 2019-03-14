@@ -55,9 +55,9 @@ tail -f apache-storm-1.2.2/logs/ui.log
 
 Create a Fat Jar file of the project by running the command line `mvn package`.
 
-Deploy the topology on the cluster. The program will ask which application you want to run and if you want to deploy on the cluster (type CLUSTER) or run locally (type LOCAL).
+Deploy the topology on the cluster. You can specify the application that you want to run by a number and the environment where you want to deploy (CLUSTER) or (LOCAL). If you not specify the program will ask it yo you.
 ```
-apache-storm-1.2.2/bin/storm jar /home/felipe/eclipse-workspace/explore-storm/target/explore-storm.jar org.sense.storm.App
+apache-storm-1.2.2/bin/storm jar /home/felipe/eclipse-workspace/explore-storm/target/explore-storm.jar org.sense.storm.App [application - 1,2,3,....] [local, cluster]
 ```
 Visualize the output on one of the workers log.
 ```

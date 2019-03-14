@@ -28,6 +28,7 @@ public class MqttSensorJoinTopology {
 	private static final String BOLT_SENSOR_PRINT = "bolt-sensor-print";
 
 	public MqttSensorJoinTopology(String msg) throws Exception {
+		logger.info("Topology with JOIN and WINDOW selected.");
 		// Create Config instance for cluster configuration
 		Config config = new Config();
 		config.setDebug(false);

@@ -22,49 +22,44 @@ public class App {
 				System.out.println("3  - reading multiple data stream sensors from train station topics and performing an AGGREGATE operation");
 				// @formatter:on
 
-				String msg = "0";
+				String appId = "0";
+				String env = "local";
 				if (args != null && args.length > 0) {
-					msg = args[0];
-					if (msg.matches("-?\\d+")) {
-						System.out.println("    Application choosed: " + msg);
+					appId = args[0];
+					if (appId.matches("-?\\d+")) {
+						System.out.println("    Application choosed: " + appId);
 					} else {
-						msg = "999";
+						appId = "999";
+					}
+					if (args.length > 1) {
+						env = args[1];
+						if (!("cluster".equalsIgnoreCase(env) || "local".equalsIgnoreCase(env))) {
+							System.err.println("Wrong environment selected.");
+							System.out.print(
+									"Please enter [cluster] or [local] to specify where you want to run your application: ");
+							env = (new Scanner(System.in)).nextLine();
+						}
 					}
 				} else {
 					System.out.print("    Please enter which application you want to run: ");
-					msg = (new Scanner(System.in)).nextLine();
+					appId = (new Scanner(System.in)).nextLine();
 				}
 
-				app = Integer.valueOf(msg);
+				app = Integer.valueOf(appId);
 				switch (app) {
 				case 0:
 					System.out.println("bis später");
 					break;
 				case 1:
-					// @formatter:off
-					System.out.println("Application 1 selected");
-					System.out.print("Please enter [cluster] or [local] to specify where you want to run your application: ");
-					// @formatter:on
-					msg = (new Scanner(System.in)).nextLine();
-					new MqttSensorTopology(msg);
+					new MqttSensorTopology(env);
 					app = 0;
 					break;
 				case 2:
-					// @formatter:off
-					System.out.println("Application 2 selected");
-					System.out.print("Please enter [cluster] or [local] to specify where you want to run your application: ");
-					// @formatter:on
-					msg = (new Scanner(System.in)).nextLine();
-					new MqttSensorJoinTopology(msg);
+					new MqttSensorJoinTopology(env);
 					app = 0;
 					break;
 				case 3:
-					// @formatter:off
-					System.out.println("Application 3 selected");
-					System.out.print("Please enter [cluster] or [local] to specify where you want to run your application: ");
-					// @formatter:on
-					msg = (new Scanner(System.in)).nextLine();
-					new MqttSensorSumTopology(msg);
+					new MqttSensorSumTopology(env);
 					app = 0;
 					break;
 				default:

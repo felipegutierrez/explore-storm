@@ -19,7 +19,8 @@ public class MqttSensorTopology {
 	private static final String BOLT_CREATE_SENSOR = "bolt-create-sensor-tuple";
 	private static final String BOLT_SENSOR_PRINT = "bolt-sensor-print";
 
-	public MqttSensorTopology(String msg) throws Exception {
+	public MqttSensorTopology(String env) throws Exception {
+		logger.info("Sensor topology with customized Resource Aware Scheduler TAG.");
 		// Create Config instance for cluster configuration
 		Config config = new Config();
 		config.setDebug(false);
@@ -43,7 +44,7 @@ public class MqttSensorTopology {
 				.addConfiguration("tags", "GPU");
 		// @formatter:on
 
-		if (msg != null && msg.equalsIgnoreCase("CLUSTER")) {
+		if (env != null && env.equalsIgnoreCase("CLUSTER")) {
 			logger.info("Running on the cluster");
 			config.setNumWorkers(1);
 			StormSubmitter.submitTopologyWithProgressBar("MqttSensorAnalyserStorm", config, builder.createTopology());
