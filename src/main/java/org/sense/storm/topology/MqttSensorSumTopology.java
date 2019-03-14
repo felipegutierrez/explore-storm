@@ -1,9 +1,13 @@
 package org.sense.storm.topology;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.log4j.Logger;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.StormSubmitter;
+import org.apache.storm.metric.LoggingMetricsConsumer;
 import org.apache.storm.topology.TopologyBuilder;
 import org.apache.storm.topology.base.BaseWindowedBolt.Duration;
 import org.apache.storm.tuple.Fields;
@@ -38,12 +42,10 @@ public class MqttSensorSumTopology {
 		// Profiling Resource Usage: Log all storm metrics
 		// This piece of code is commented because it is throwing the error:
 		// java.lang.UnsatisfiedLinkError: org.hyperic.sigar.Sigar.getPid()
-		/**
-		 * config.registerMetricsConsumer(LoggingMetricsConsumer.class);
-		 * Map<String,String> workerMetrics = new HashMap<String, String>();
-		 * workerMetrics.put("CPU", "org.apache.storm.metrics.sigar.CPUMetric");
-		 * config.put(Config.TOPOLOGY_WORKER_METRICS, workerMetrics);
-		 */
+		config.registerMetricsConsumer(LoggingMetricsConsumer.class);
+		Map<String, String> workerMetrics = new HashMap<String, String>();
+		workerMetrics.put("CPU", "org.apache.storm.metrics.sigar.CPUMetric");
+		config.put(Config.TOPOLOGY_WORKER_METRICS, workerMetrics);
 
 		// Data stream topology
 		TopologyBuilder topologyBuilder = new TopologyBuilder();
