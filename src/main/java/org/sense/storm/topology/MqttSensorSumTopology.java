@@ -2,16 +2,18 @@ package org.sense.storm.topology;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.StormSubmitter;
+import org.apache.storm.bolt.JoinBolt;
 import org.apache.storm.metric.LoggingMetricsConsumer;
 import org.apache.storm.topology.TopologyBuilder;
+import org.apache.storm.topology.base.BaseWindowedBolt;
 import org.apache.storm.topology.base.BaseWindowedBolt.Duration;
 import org.apache.storm.tuple.Fields;
-import org.sense.storm.bolt.PrinterBolt;
 import org.sense.storm.bolt.SensorJoinTicketTrainPrinterBolt;
 import org.sense.storm.bolt.SumSensorValuesWindowBolt;
 import org.sense.storm.spout.MqttSensorDetailSpout;
@@ -22,8 +24,7 @@ public class MqttSensorSumTopology {
 
 	final static Logger logger = Logger.getLogger(MqttSensorSumTopology.class);
 
-	private static final String BOLT_SENSOR_TICKET_SUM = "bolt-sensor-ticket-sum";
-	private static final String BOLT_SENSOR_TRAIN_SUM = "bolt-sensor-train-sum";
+	private static final String BOLT_SENSOR_JOINER = "bolt-sensor-joiner";
 	private static final String BOLT_SENSOR_PRINT = "bolt-sensor-print";
 
 	public MqttSensorSumTopology(String msg) throws Exception {
@@ -69,29 +70,34 @@ public class MqttSensorSumTopology {
 				;
 
 		// Bolts to compute the sum of TICKETS and TRAINS
-		topologyBuilder.setBolt(BOLT_SENSOR_TICKET_SUM, new SumSensorValuesWindowBolt(SensorType.COUNTER_TICKETS).withTumblingWindow(Duration.seconds(5)), 1)
+		topologyBuilder.setBolt(MqttSensors.BOLT_SENSOR_TICKET_SUM.getValue(), new SumSensorValuesWindowBolt(SensorType.COUNTER_TICKETS).withTumblingWindow(Duration.seconds(5)), 1)
 				.shuffleGrouping(MqttSensors.SPOUT_STATION_01_TICKETS.getValue())
 				// .setMemoryLoad(512.0)
 				// .setCPULoad(10.0)
 				;
-		topologyBuilder.setBolt(BOLT_SENSOR_TRAIN_SUM, new SumSensorValuesWindowBolt(SensorType.COUNTER_TRAINS).withTumblingWindow(Duration.seconds(5)), 1)
+		topologyBuilder.setBolt(MqttSensors.BOLT_SENSOR_TRAIN_SUM.getValue(), new SumSensorValuesWindowBolt(SensorType.COUNTER_TRAINS).withTumblingWindow(Duration.seconds(5)), 1)
 				.shuffleGrouping(MqttSensors.SPOUT_STATION_01_TRAINS.getValue())
 				// .setMemoryLoad(512.0)
 				// .setCPULoad(10.0)
 				;
 
 		// Joiner Bolt
-		SensorJoinTicketTrainPrinterBolt projection = new SensorJoinTicketTrainPrinterBolt(1);
-		// JoinBolt joiner = new JoinBolt(BOLT_SENSOR_TICKET_SUM, MqttSensorDetailSpout.FIELD_PLATFORM_ID)
-		// 		.join(BOLT_SENSOR_TRAIN_SUM, MqttSensorDetailSpout.FIELD_PLATFORM_ID, MqttSensorDetailSpout.SPOUT_STATION_01_TICKETS)
-		// 		.select(projection.getProjection())
-		// 		.withTumblingWindow(new BaseWindowedBolt.Duration(5, TimeUnit.SECONDS));
-		
-		
+		SensorJoinTicketTrainPrinterBolt projection = new SensorJoinTicketTrainPrinterBolt(2);
+		JoinBolt joiner = new JoinBolt(MqttSensors.BOLT_SENSOR_TICKET_SUM.getValue(), MqttSensors.FIELD_PLATFORM_ID.getValue())
+		 		.join(MqttSensors.BOLT_SENSOR_TRAIN_SUM.getValue(), MqttSensors.FIELD_PLATFORM_ID.getValue(), MqttSensors.BOLT_SENSOR_TICKET_SUM.getValue())
+		 		.select(projection.getProjection())
+		 		.withTumblingWindow(new BaseWindowedBolt.Duration(5, TimeUnit.SECONDS));
+		topologyBuilder.setBolt(BOLT_SENSOR_JOINER, joiner)
+				.fieldsGrouping(MqttSensors.BOLT_SENSOR_TICKET_SUM.getValue(), new Fields(MqttSensors.FIELD_PLATFORM_ID.getValue()))
+				.fieldsGrouping(MqttSensors.BOLT_SENSOR_TRAIN_SUM.getValue(), new Fields(MqttSensors.FIELD_PLATFORM_ID.getValue()));
+
 		// Printer Bolt
-		topologyBuilder.setBolt(BOLT_SENSOR_PRINT, new PrinterBolt(), 1)
-				.shuffleGrouping(BOLT_SENSOR_TICKET_SUM)
-				.shuffleGrouping(BOLT_SENSOR_TRAIN_SUM)
+		topologyBuilder.setBolt(BOLT_SENSOR_PRINT, projection).shuffleGrouping(BOLT_SENSOR_JOINER);
+
+		// Printer Bolt
+		// topologyBuilder.setBolt(BOLT_SENSOR_PRINT, new PrinterBolt(), 1)
+				// .shuffleGrouping(BOLT_SENSOR_TICKET_SUM)
+				// .shuffleGrouping(BOLT_SENSOR_TRAIN_SUM)
 				// .setMemoryLoad(512.0)
 				// .setCPULoad(10.0)
 				;

@@ -12,6 +12,7 @@ import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 import org.apache.storm.tuple.Values;
 import org.apache.storm.windowing.TupleWindow;
+import org.sense.storm.utils.MqttSensors;
 import org.sense.storm.utils.SensorType;
 
 /**
@@ -80,13 +81,14 @@ public class SumSensorValuesWindowBolt extends BaseWindowedBolt {
 			}
 		}
 		for (Map.Entry<Integer, Double> entry : sum.entrySet()) {
-			collector.emit(new Values("sensor: " + this.sensorType.getValue(), "platform: " + entry.getKey(),
-					entry.getValue()));
+			// outputs: sensorType, platformId, sum
+			collector.emit(new Values(this.sensorType.getValue(), entry.getKey(), entry.getValue()));
 		}
 	}
 
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("counter-sensorType", "platformId", "sum"));
+		declarer.declare(new Fields(MqttSensors.FIELD_SENSOR_TYPE.getValue(), MqttSensors.FIELD_PLATFORM_ID.getValue(),
+				MqttSensors.FIELD_SUM.getValue()));
 	}
 }

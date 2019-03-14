@@ -109,6 +109,43 @@ public class SensorJoinTicketTrainPrinterBolt extends BaseRichBolt {
 			resultProjection = resultLeft + " - " + resultRight + " - platformType[" + rightPlatformType
 					+ "] stationId[" + rightStationId + "]";
 			break;
+		case 2:
+			try {
+				leftSensorType = input.getString(0);
+			} catch (ClassCastException re) {
+				System.err.println("Error converting left.sensorType.");
+			}
+			try {
+				leftPlatformId = input.getInteger(1);
+			} catch (ClassCastException re) {
+				System.err.println("Error converting left.platformId.");
+			}
+			try {
+				leftValue = input.getDouble(2);
+			} catch (ClassCastException re) {
+				System.err.println("Error converting left.value.");
+			}
+
+			try {
+				rightSensorType = input.getString(3);
+			} catch (ClassCastException re) {
+				System.err.println("Error converting right.sensorType.");
+			}
+			try {
+				rightPlatformId = input.getInteger(4);
+			} catch (ClassCastException re) {
+				System.err.println("Error converting right.platformId.");
+			}
+			try {
+				rightValue = input.getDouble(5);
+			} catch (ClassCastException re) {
+				System.err.println("Error converting right.value.");
+			}
+
+			resultLeft = "left sensorType[" + leftSensorType + "] sum[" + leftValue + "]";
+			resultRight = "right sensorType[" + rightSensorType + "] sum[" + rightValue + "]";
+			resultProjection = resultLeft + " - " + resultRight + " - platformId[" + leftPlatformId + "]";
+			break;
 		default:
 			try {
 				leftSensorId = input.getInteger(0);
@@ -227,6 +264,16 @@ public class SensorJoinTicketTrainPrinterBolt extends BaseRichBolt {
 					+ ":" + MqttSensors.FIELD_VALUE.getValue() + "," + MqttSensors.SPOUT_STATION_01_TICKETS.getValue()
 					+ ":" + MqttSensors.FIELD_PLATFORM_TYPE.getValue() + ","
 					+ MqttSensors.SPOUT_STATION_01_TICKETS.getValue() + ":" + MqttSensors.FIELD_STATION_ID.getValue();
+			break;
+		case 2:
+			this.projection = MqttSensors.BOLT_SENSOR_TICKET_SUM.getValue() + ":"
+					+ MqttSensors.FIELD_SENSOR_TYPE.getValue() + "," + MqttSensors.BOLT_SENSOR_TICKET_SUM.getValue()
+					+ ":" + MqttSensors.FIELD_PLATFORM_ID.getValue() + ","
+					+ MqttSensors.BOLT_SENSOR_TICKET_SUM.getValue() + ":" + MqttSensors.FIELD_SUM.getValue() + ","
+					+ MqttSensors.BOLT_SENSOR_TRAIN_SUM.getValue() + ":" + MqttSensors.FIELD_SENSOR_TYPE.getValue()
+					+ "," + MqttSensors.BOLT_SENSOR_TRAIN_SUM.getValue() + ":"
+					+ MqttSensors.FIELD_PLATFORM_ID.getValue() + "," + MqttSensors.BOLT_SENSOR_TRAIN_SUM.getValue()
+					+ ":" + MqttSensors.FIELD_SUM.getValue();
 			break;
 		default:
 			this.projection = MqttSensors.SPOUT_STATION_01_TICKETS.getValue() + ":"

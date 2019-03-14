@@ -11,7 +11,11 @@ public enum MqttSensors {
 
 	SPOUT_STATION_01_PEOPLE("spout-station-01-people"), SPOUT_STATION_01_TRAINS("spout-station-01-trains"),
 	SPOUT_STATION_01_TICKETS("spout-station-01-tickets"), SPOUT_STATION_02_PEOPLE("spout-station-02-people"),
-	SPOUT_STATION_02_TRAINS("spout-station-02-trains"), SPOUT_STATION_02_TICKETS("spout-station-02-tickets");
+	SPOUT_STATION_02_TRAINS("spout-station-02-trains"), SPOUT_STATION_02_TICKETS("spout-station-02-tickets"),
+
+	BOLT_SENSOR_TICKET_SUM("bolt-sensor-ticket-sum"), BOLT_SENSOR_TRAIN_SUM("bolt-sensor-train-sum"),
+
+	FIELD_SUM("sum"), FIELD_AVERAGE("average");
 
 	private String value;
 
