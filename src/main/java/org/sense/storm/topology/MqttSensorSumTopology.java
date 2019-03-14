@@ -15,25 +15,20 @@ import org.sense.storm.bolt.PrinterBolt;
 import org.sense.storm.bolt.SensorJoinTicketTrainPrinterBolt;
 import org.sense.storm.bolt.SumSensorValuesWindowBolt;
 import org.sense.storm.spout.MqttSensorDetailSpout;
+import org.sense.storm.utils.MqttSensors;
 import org.sense.storm.utils.SensorType;
 
 public class MqttSensorSumTopology {
 
 	final static Logger logger = Logger.getLogger(MqttSensorSumTopology.class);
 
-	private static final String TOPIC_STATION_01_PEOPLE = "topic-station-01-people";
-	private static final String TOPIC_STATION_01_TRAINS = "topic-station-01-trains";
-	private static final String TOPIC_STATION_01_TICKETS = "topic-station-01-tickets";
-	private static final String TOPIC_STATION_02_PEOPLE = "topic-station-02-people";
-	private static final String TOPIC_STATION_02_TRAINS = "topic-station-02-trains";
-	private static final String TOPIC_STATION_02_TICKETS = "topic-station-02-tickets";
-
 	private static final String BOLT_SENSOR_TICKET_SUM = "bolt-sensor-ticket-sum";
 	private static final String BOLT_SENSOR_TRAIN_SUM = "bolt-sensor-train-sum";
 	private static final String BOLT_SENSOR_PRINT = "bolt-sensor-print";
 
 	public MqttSensorSumTopology(String msg) throws Exception {
-		logger.info("Topology with Default Resource Aware Schedule and Metrics selected.");
+		logger.info(
+				"Topology with AGGREGATE over a window, JOIN and Default Resource Aware Schedule and Metrics selected.");
 
 		// Create Config instance for cluster configuration
 		Config config = new Config();
@@ -56,31 +51,31 @@ public class MqttSensorSumTopology {
 
 		// @formatter:off
 		// Fields
-		Fields fields = new Fields(MqttSensorDetailSpout.FIELD_SENSOR_ID, 
-				MqttSensorDetailSpout.FIELD_SENSOR_TYPE, 
-				MqttSensorDetailSpout.FIELD_PLATFORM_ID, 
-				MqttSensorDetailSpout.FIELD_PLATFORM_TYPE,
-				MqttSensorDetailSpout.FIELD_STATION_ID, 
-				MqttSensorDetailSpout.FIELD_VALUE);
+		Fields fields = new Fields(MqttSensors.FIELD_SENSOR_ID.getValue(), 
+				MqttSensors.FIELD_SENSOR_TYPE.getValue(), 
+				MqttSensors.FIELD_PLATFORM_ID.getValue(), 
+				MqttSensors.FIELD_PLATFORM_TYPE.getValue(),
+				MqttSensors.FIELD_STATION_ID.getValue(), 
+				MqttSensors.FIELD_VALUE.getValue());
 
 		// Spouts: data stream from count ticket and count train sensors
-		topologyBuilder.setSpout(MqttSensorDetailSpout.SPOUT_STATION_01_TICKETS, new MqttSensorDetailSpout(TOPIC_STATION_01_TICKETS, fields))
+		topologyBuilder.setSpout(MqttSensors.SPOUT_STATION_01_TICKETS.getValue(), new MqttSensorDetailSpout(MqttSensors.TOPIC_STATION_01_TICKETS.getValue(), fields))
 				// .setMemoryLoad(512.0)
 				// .setCPULoad(100.0)
 				;
-		topologyBuilder.setSpout(MqttSensorDetailSpout.SPOUT_STATION_01_TRAINS, new MqttSensorDetailSpout(TOPIC_STATION_01_TRAINS, fields))
+		topologyBuilder.setSpout(MqttSensors.SPOUT_STATION_01_TRAINS.getValue(), new MqttSensorDetailSpout(MqttSensors.TOPIC_STATION_01_TRAINS.getValue(), fields))
 				// .setMemoryLoad(512.0)
 				// .setCPULoad(100.0)
 				;
 
 		// Bolts to compute the sum of TICKETS and TRAINS
 		topologyBuilder.setBolt(BOLT_SENSOR_TICKET_SUM, new SumSensorValuesWindowBolt(SensorType.COUNTER_TICKETS).withTumblingWindow(Duration.seconds(5)), 1)
-				.shuffleGrouping(MqttSensorDetailSpout.SPOUT_STATION_01_TICKETS)
+				.shuffleGrouping(MqttSensors.SPOUT_STATION_01_TICKETS.getValue())
 				// .setMemoryLoad(512.0)
 				// .setCPULoad(10.0)
 				;
 		topologyBuilder.setBolt(BOLT_SENSOR_TRAIN_SUM, new SumSensorValuesWindowBolt(SensorType.COUNTER_TRAINS).withTumblingWindow(Duration.seconds(5)), 1)
-				.shuffleGrouping(MqttSensorDetailSpout.SPOUT_STATION_01_TRAINS)
+				.shuffleGrouping(MqttSensors.SPOUT_STATION_01_TRAINS.getValue())
 				// .setMemoryLoad(512.0)
 				// .setCPULoad(10.0)
 				;

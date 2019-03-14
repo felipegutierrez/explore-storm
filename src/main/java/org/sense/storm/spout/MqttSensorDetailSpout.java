@@ -38,20 +38,6 @@ public class MqttSensorDetailSpout extends BaseRichSpout {
 
 	private Fields outFields;
 
-	public static final String SPOUT_STATION_01_PEOPLE = "spout-station-01-people";
-	public static final String SPOUT_STATION_01_TRAINS = "spout-station-01-trains";
-	public static final String SPOUT_STATION_01_TICKETS = "spout-station-01-tickets";
-	public static final String SPOUT_STATION_02_PEOPLE = "spout-station-02-people";
-	public static final String SPOUT_STATION_02_TRAINS = "spout-station-02-trains";
-	public static final String SPOUT_STATION_02_TICKETS = "spout-station-02-tickets";
-
-	public static final String FIELD_SENSOR_ID = "sensorId";
-	public static final String FIELD_SENSOR_TYPE = "sensorType";
-	public static final String FIELD_PLATFORM_ID = "platformId";
-	public static final String FIELD_PLATFORM_TYPE = "platformType";
-	public static final String FIELD_STATION_ID = "stationId";
-	public static final String FIELD_VALUE = "value";
-
 	public MqttSensorDetailSpout(String topic, Fields outFields) {
 		this(DEFAUL_HOST, DEFAUL_PORT, topic, QoS.AT_LEAST_ONCE, outFields);
 	}

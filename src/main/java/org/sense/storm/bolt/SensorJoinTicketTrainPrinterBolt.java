@@ -11,7 +11,7 @@ import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.base.BaseRichBolt;
 import org.apache.storm.tuple.Tuple;
-import org.sense.storm.spout.MqttSensorDetailSpout;
+import org.sense.storm.utils.MqttSensors;
 
 public class SensorJoinTicketTrainPrinterBolt extends BaseRichBolt {
 
@@ -217,33 +217,34 @@ public class SensorJoinTicketTrainPrinterBolt extends BaseRichBolt {
 	private void setProjection(int id) {
 		switch (id) {
 		case 1:
-			this.projection = MqttSensorDetailSpout.SPOUT_STATION_01_TICKETS + ":"
-					+ MqttSensorDetailSpout.FIELD_SENSOR_ID + "," + MqttSensorDetailSpout.SPOUT_STATION_01_TICKETS + ":"
-					+ MqttSensorDetailSpout.FIELD_SENSOR_TYPE + "," + MqttSensorDetailSpout.SPOUT_STATION_01_TICKETS
-					+ ":" + MqttSensorDetailSpout.FIELD_VALUE + "," + MqttSensorDetailSpout.SPOUT_STATION_01_TRAINS
-					+ ":" + MqttSensorDetailSpout.FIELD_SENSOR_ID + "," + MqttSensorDetailSpout.SPOUT_STATION_01_TRAINS
-					+ ":" + MqttSensorDetailSpout.FIELD_SENSOR_TYPE + ","
-					+ MqttSensorDetailSpout.SPOUT_STATION_01_TRAINS + ":" + MqttSensorDetailSpout.FIELD_VALUE + ","
-					+ MqttSensorDetailSpout.SPOUT_STATION_01_TICKETS + ":" + MqttSensorDetailSpout.FIELD_PLATFORM_TYPE
-					+ "," + MqttSensorDetailSpout.SPOUT_STATION_01_TICKETS + ":"
-					+ MqttSensorDetailSpout.FIELD_STATION_ID;
+			this.projection = MqttSensors.SPOUT_STATION_01_TICKETS.getValue() + ":"
+					+ MqttSensors.FIELD_SENSOR_ID.getValue() + "," + MqttSensors.SPOUT_STATION_01_TICKETS.getValue()
+					+ ":" + MqttSensors.FIELD_SENSOR_TYPE.getValue() + ","
+					+ MqttSensors.SPOUT_STATION_01_TICKETS.getValue() + ":" + MqttSensors.FIELD_VALUE.getValue() + ","
+					+ MqttSensors.SPOUT_STATION_01_TRAINS.getValue() + ":" + MqttSensors.FIELD_SENSOR_ID.getValue()
+					+ "," + MqttSensors.SPOUT_STATION_01_TRAINS.getValue() + ":"
+					+ MqttSensors.FIELD_SENSOR_TYPE.getValue() + "," + MqttSensors.SPOUT_STATION_01_TRAINS.getValue()
+					+ ":" + MqttSensors.FIELD_VALUE.getValue() + "," + MqttSensors.SPOUT_STATION_01_TICKETS.getValue()
+					+ ":" + MqttSensors.FIELD_PLATFORM_TYPE.getValue() + ","
+					+ MqttSensors.SPOUT_STATION_01_TICKETS.getValue() + ":" + MqttSensors.FIELD_STATION_ID.getValue();
 			break;
 		default:
-			this.projection = MqttSensorDetailSpout.SPOUT_STATION_01_TICKETS + ":"
-					+ MqttSensorDetailSpout.FIELD_SENSOR_ID + "," + MqttSensorDetailSpout.SPOUT_STATION_01_TICKETS + ":"
-					+ MqttSensorDetailSpout.FIELD_SENSOR_TYPE + "," + MqttSensorDetailSpout.SPOUT_STATION_01_TICKETS
-					+ ":" + MqttSensorDetailSpout.FIELD_PLATFORM_ID + ","
-					+ MqttSensorDetailSpout.SPOUT_STATION_01_TICKETS + ":" + MqttSensorDetailSpout.FIELD_PLATFORM_TYPE
-					+ "," + MqttSensorDetailSpout.SPOUT_STATION_01_TICKETS + ":"
-					+ MqttSensorDetailSpout.FIELD_STATION_ID + "," + MqttSensorDetailSpout.SPOUT_STATION_01_TICKETS
-					+ ":" + MqttSensorDetailSpout.FIELD_VALUE + "," + MqttSensorDetailSpout.SPOUT_STATION_01_TRAINS
-					+ ":" + MqttSensorDetailSpout.FIELD_SENSOR_ID + "," + MqttSensorDetailSpout.SPOUT_STATION_01_TRAINS
-					+ ":" + MqttSensorDetailSpout.FIELD_SENSOR_TYPE + ","
-					+ MqttSensorDetailSpout.SPOUT_STATION_01_TRAINS + ":" + MqttSensorDetailSpout.FIELD_PLATFORM_ID
-					+ "," + MqttSensorDetailSpout.SPOUT_STATION_01_TRAINS + ":"
-					+ MqttSensorDetailSpout.FIELD_PLATFORM_TYPE + "," + MqttSensorDetailSpout.SPOUT_STATION_01_TRAINS
-					+ ":" + MqttSensorDetailSpout.FIELD_STATION_ID + "," + MqttSensorDetailSpout.SPOUT_STATION_01_TRAINS
-					+ ":" + MqttSensorDetailSpout.FIELD_VALUE;
+			this.projection = MqttSensors.SPOUT_STATION_01_TICKETS.getValue() + ":"
+					+ MqttSensors.FIELD_SENSOR_ID.getValue() + "," + MqttSensors.SPOUT_STATION_01_TICKETS.getValue()
+					+ ":" + MqttSensors.FIELD_SENSOR_TYPE.getValue() + ","
+					+ MqttSensors.SPOUT_STATION_01_TICKETS.getValue() + ":" + MqttSensors.FIELD_PLATFORM_ID.getValue()
+					+ "," + MqttSensors.SPOUT_STATION_01_TICKETS.getValue() + ":"
+					+ MqttSensors.FIELD_PLATFORM_TYPE.getValue() + "," + MqttSensors.SPOUT_STATION_01_TICKETS.getValue()
+					+ ":" + MqttSensors.FIELD_STATION_ID.getValue() + ","
+					+ MqttSensors.SPOUT_STATION_01_TICKETS.getValue() + ":" + MqttSensors.FIELD_VALUE.getValue() + ","
+					+ MqttSensors.SPOUT_STATION_01_TRAINS.getValue() + ":" + MqttSensors.FIELD_SENSOR_ID.getValue()
+					+ "," + MqttSensors.SPOUT_STATION_01_TRAINS.getValue() + ":"
+					+ MqttSensors.FIELD_SENSOR_TYPE.getValue() + "," + MqttSensors.SPOUT_STATION_01_TRAINS.getValue()
+					+ ":" + MqttSensors.FIELD_PLATFORM_ID.getValue() + ","
+					+ MqttSensors.SPOUT_STATION_01_TRAINS.getValue() + ":" + MqttSensors.FIELD_PLATFORM_TYPE.getValue()
+					+ "," + MqttSensors.SPOUT_STATION_01_TRAINS.getValue() + ":"
+					+ MqttSensors.FIELD_STATION_ID.getValue() + "," + MqttSensors.SPOUT_STATION_01_TRAINS.getValue()
+					+ ":" + MqttSensors.FIELD_VALUE.getValue();
 			break;
 		}
 	}

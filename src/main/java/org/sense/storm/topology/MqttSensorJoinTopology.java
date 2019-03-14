@@ -12,17 +12,11 @@ import org.apache.storm.topology.base.BaseWindowedBolt;
 import org.apache.storm.tuple.Fields;
 import org.sense.storm.bolt.SensorJoinTicketTrainPrinterBolt;
 import org.sense.storm.spout.MqttSensorDetailSpout;
+import org.sense.storm.utils.MqttSensors;
 
 public class MqttSensorJoinTopology {
 
 	final static Logger logger = Logger.getLogger(MqttSensorJoinTopology.class);
-
-	private static final String TOPIC_STATION_01_PEOPLE = "topic-station-01-people";
-	private static final String TOPIC_STATION_01_TRAINS = "topic-station-01-trains";
-	private static final String TOPIC_STATION_01_TICKETS = "topic-station-01-tickets";
-	private static final String TOPIC_STATION_02_PEOPLE = "topic-station-02-people";
-	private static final String TOPIC_STATION_02_TRAINS = "topic-station-02-trains";
-	private static final String TOPIC_STATION_02_TICKETS = "topic-station-02-tickets";
 
 	private static final String BOLT_SENSOR_JOINER = "bolt-sensor-joiner";
 	private static final String BOLT_SENSOR_PRINT = "bolt-sensor-print";
@@ -37,26 +31,27 @@ public class MqttSensorJoinTopology {
 
 		// @formatter:off
 		// Fields
-		Fields fields = new Fields(MqttSensorDetailSpout.FIELD_SENSOR_ID, 
-				MqttSensorDetailSpout.FIELD_SENSOR_TYPE, 
-				MqttSensorDetailSpout.FIELD_PLATFORM_ID, 
-				MqttSensorDetailSpout.FIELD_PLATFORM_TYPE,
-				MqttSensorDetailSpout.FIELD_STATION_ID, 
-				MqttSensorDetailSpout.FIELD_VALUE);
+		Fields fields = new Fields(MqttSensors.FIELD_SENSOR_ID.getValue(), 
+				MqttSensors.FIELD_SENSOR_TYPE.getValue(), 
+				MqttSensors.FIELD_PLATFORM_ID.getValue(), 
+				MqttSensors.FIELD_PLATFORM_TYPE.getValue(),
+				MqttSensors.FIELD_STATION_ID.getValue(), 
+				MqttSensors.FIELD_VALUE.getValue());
 
+		
 		// Spouts: data stream from count ticket and count train sensors
-		builder.setSpout(MqttSensorDetailSpout.SPOUT_STATION_01_TICKETS, new MqttSensorDetailSpout(TOPIC_STATION_01_TICKETS, fields));
-		builder.setSpout(MqttSensorDetailSpout.SPOUT_STATION_01_TRAINS, new MqttSensorDetailSpout(TOPIC_STATION_01_TRAINS, fields));
+		builder.setSpout(MqttSensors.SPOUT_STATION_01_TICKETS.getValue(), new MqttSensorDetailSpout(MqttSensors.TOPIC_STATION_01_TICKETS.getValue(), fields));
+		builder.setSpout(MqttSensors.SPOUT_STATION_01_TRAINS.getValue(), new MqttSensorDetailSpout(MqttSensors.TOPIC_STATION_01_TRAINS.getValue(), fields));
 
 		// Joiner Bolt
 		SensorJoinTicketTrainPrinterBolt projection = new SensorJoinTicketTrainPrinterBolt(1);
-		JoinBolt joiner = new JoinBolt(MqttSensorDetailSpout.SPOUT_STATION_01_TICKETS, MqttSensorDetailSpout.FIELD_PLATFORM_ID)
-				.join(MqttSensorDetailSpout.SPOUT_STATION_01_TRAINS, MqttSensorDetailSpout.FIELD_PLATFORM_ID, MqttSensorDetailSpout.SPOUT_STATION_01_TICKETS)
+		JoinBolt joiner = new JoinBolt(MqttSensors.SPOUT_STATION_01_TICKETS.getValue(), MqttSensors.FIELD_PLATFORM_ID.getValue())
+				.join(MqttSensors.SPOUT_STATION_01_TRAINS.getValue(), MqttSensors.FIELD_PLATFORM_ID.getValue(), MqttSensors.SPOUT_STATION_01_TICKETS.getValue())
 				.select(projection.getProjection())
 				.withTumblingWindow(new BaseWindowedBolt.Duration(5, TimeUnit.SECONDS));
 		builder.setBolt(BOLT_SENSOR_JOINER, joiner)
-				.fieldsGrouping(MqttSensorDetailSpout.SPOUT_STATION_01_TICKETS, new Fields(MqttSensorDetailSpout.FIELD_PLATFORM_ID))
-				.fieldsGrouping(MqttSensorDetailSpout.SPOUT_STATION_01_TRAINS, new Fields(MqttSensorDetailSpout.FIELD_PLATFORM_ID));
+				.fieldsGrouping(MqttSensors.SPOUT_STATION_01_TICKETS.getValue(), new Fields(MqttSensors.FIELD_PLATFORM_ID.getValue()))
+				.fieldsGrouping(MqttSensors.SPOUT_STATION_01_TRAINS.getValue(), new Fields(MqttSensors.FIELD_PLATFORM_ID.getValue()));
 
 		// Printer Bolt
 		builder.setBolt(BOLT_SENSOR_PRINT, projection).shuffleGrouping(BOLT_SENSOR_JOINER);
