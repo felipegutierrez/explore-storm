@@ -93,14 +93,6 @@ public class MqttSensorSumTopology {
 
 		// Printer Bolt
 		topologyBuilder.setBolt(BOLT_SENSOR_PRINT, projection).shuffleGrouping(BOLT_SENSOR_JOINER);
-
-		// Printer Bolt
-		// topologyBuilder.setBolt(BOLT_SENSOR_PRINT, new PrinterBolt(), 1)
-				// .shuffleGrouping(BOLT_SENSOR_TICKET_SUM)
-				// .shuffleGrouping(BOLT_SENSOR_TRAIN_SUM)
-				// .setMemoryLoad(512.0)
-				// .setCPULoad(10.0)
-				;
 		// @formatter:on
 
 		if (msg != null && msg.equalsIgnoreCase("CLUSTER")) {
