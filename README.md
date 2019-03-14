@@ -53,13 +53,8 @@ tail -f apache-storm-1.2.2/logs/ui.log
 
 ## Running a Topology
 
-Export the project as a Jar file using Eclipse IDE: `Right button on the project` > `Export` > `Runnable JAR file` > `Copy required libraries into sub-folder next to the generated JAR` > `Finish`.
+Create a Fat Jar file of the project by running the command line `mvn package`.
 
-Copy libraries to the Storm lib path
-```
-cd eclipse-workspace/target/explore-storm_lib/
-cp -Rf hawtdispatch-transport-1.22.jar hawtdispatch-1.22.jar hawtbuf-1.11.jar sigar-1.6.4.jar ../../Server/storm/datadir/storm/apache-storm-1.2.2/lib/
-```
 Deploy the topology on the cluster. The program will ask which application you want to run and if you want to deploy on the cluster (type CLUSTER) or run locally (type LOCAL).
 ```
 apache-storm-1.2.2/bin/storm jar /home/felipe/eclipse-workspace/explore-storm/target/explore-storm.jar org.sense.storm.App
@@ -68,7 +63,6 @@ Visualize the output on one of the workers log.
 ```
 tail -f apache-storm-1.2.2/logs/workers-artifacts/MqttSensorAnalyserStorm-3-1551877355/6701/worker.log
 ```
-
 If an error occuors in the topology you may want to fix the error and re-deploy it on the cluster. However, you have to remove the topology which has an error. For this you have to execute the command bellow:
 ```
 storm kill MqttSensorAnalyserStorm [-w wait-time-secs]
