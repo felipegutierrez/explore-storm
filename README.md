@@ -93,6 +93,15 @@ storm.scheduler: "org.sense.storm.scheduler.TagAwareScheduler"
 And restart all the storm services on the cluster
 
 
+## Adding metrics to the Storm topology
+
+Install and configure Graphite using [this tutorial](https://www.vultr.com/docs/how-to-install-and-configure-graphite-on-ubuntu-16-04). For every new topology that you create you must configure it using the class [GraphiteMetricsConsumer](https://github.com/felipegutierrez/explore-storm/blob/master/src/main/java/org/sense/storm/metrics/GraphiteMetricsConsumer.java) which implements [IMetricsConsumer](http://storm.apache.org/releases/1.2.2/Metrics.html) interface.
+```
+config.put(GraphiteMetricsConsumer.REPORTER_NAME, "MqttSensorSumTopology");
+config.put(GraphiteMetricsConsumer.GRAPHITE_HOST, "127.0.0.1");
+config.put(GraphiteMetricsConsumer.GRAPHITE_PORT, "2003");
+config.registerMetricsConsumer(GraphiteMetricsConsumer.class, 1);
+```
 
 
 
