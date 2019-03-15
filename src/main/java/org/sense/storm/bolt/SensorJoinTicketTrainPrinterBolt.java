@@ -31,6 +31,7 @@ public class SensorJoinTicketTrainPrinterBolt extends BaseRichBolt {
 		this.setProjection(projectionId);
 	}
 
+	@Override
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
 		this.collector = collector;
 		this.result = new ArrayList<String>();
@@ -38,6 +39,7 @@ public class SensorJoinTicketTrainPrinterBolt extends BaseRichBolt {
 		this.id = context.getThisTaskId();
 	}
 
+	@Override
 	public void execute(Tuple input) {
 		Integer leftSensorId = null;
 		String leftSensorType = null;

@@ -1,7 +1,5 @@
 package org.sense.storm.topology;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
@@ -9,13 +7,13 @@ import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.StormSubmitter;
 import org.apache.storm.bolt.JoinBolt;
-import org.apache.storm.metric.LoggingMetricsConsumer;
 import org.apache.storm.topology.TopologyBuilder;
 import org.apache.storm.topology.base.BaseWindowedBolt;
 import org.apache.storm.topology.base.BaseWindowedBolt.Duration;
 import org.apache.storm.tuple.Fields;
 import org.sense.storm.bolt.SensorJoinTicketTrainPrinterBolt;
 import org.sense.storm.bolt.SumSensorValuesWindowBolt;
+import org.sense.storm.metrics.GraphiteMetricsConsumer;
 import org.sense.storm.spout.MqttSensorDetailSpout;
 import org.sense.storm.utils.MqttSensors;
 import org.sense.storm.utils.SensorType;
@@ -34,18 +32,16 @@ public class MqttSensorSumTopology {
 		// Create Config instance for cluster configuration
 		Config config = new Config();
 		config.setDebug(false);
-		config.setNumWorkers(1);
+		config.setNumWorkers(2);
 
 		// The memory limit a worker process will be allocated in megabytes
 		// config.setTopologyWorkerMaxHeapSize(512.0);
 
 		// Profiling Resource Usage: Log all storm metrics
-		// This piece of code is commented because it is throwing the error:
-		// java.lang.UnsatisfiedLinkError: org.hyperic.sigar.Sigar.getPid()
-		config.registerMetricsConsumer(LoggingMetricsConsumer.class);
-		Map<String, String> workerMetrics = new HashMap<String, String>();
-		workerMetrics.put("CPU", "org.apache.storm.metrics.sigar.CPUMetric");
-		config.put(Config.TOPOLOGY_WORKER_METRICS, workerMetrics);
+		config.put(GraphiteMetricsConsumer.REPORTER_NAME, "MqttSensorSumTopology");
+		config.put(GraphiteMetricsConsumer.GRAPHITE_HOST, "127.0.0.1");
+		config.put(GraphiteMetricsConsumer.GRAPHITE_PORT, "2003");
+		config.registerMetricsConsumer(GraphiteMetricsConsumer.class, 1);
 
 		// Data stream topology
 		TopologyBuilder topologyBuilder = new TopologyBuilder();
