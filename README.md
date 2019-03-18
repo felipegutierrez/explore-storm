@@ -84,11 +84,15 @@ Make sure that the sum of all memory set on the method `setMemoryLoad()` does no
 
 ## Adding an extendable scheduler on Storm
 
-To add an extendable scheduler on Storm you have to implement the `IScheduler` interface. This project has an example on the file [TagAwareScheduler.java](https://github.com/felipegutierrez/explore-storm/blob/master/src/main/java/org/sense/storm/scheduler/TagAwareScheduler.java). Then, you have to add the following lines on the file `apache-storm-1.2.2/conf/storm.yaml`:
+To add an extendable scheduler on Storm you have to implement the `IScheduler` interface. This project has an example on the file [SiteAwareScheduler.java](https://github.com/felipegutierrez/explore-storm/blob/master/src/main/java/org/sense/storm/scheduler/SiteAwareScheduler.java). Then, you have to add the following lines on the file `apache-storm-1.2.2/conf/storm.yaml`:
 ```
 supervisor.scheduler.meta:
-    tags: GPU
-storm.scheduler: "org.sense.storm.scheduler.TagAwareScheduler"
+  site: "cluster"
+storm.scheduler: "org.sense.storm.scheduler.SiteAwareScheduler"
+```
+or
+```
+storm.scheduler: "org.apache.storm.scheduler.resource.ResourceAwareScheduler"
 ```
 And restart all the storm services on the cluster
 
@@ -113,6 +117,7 @@ config.registerMetricsConsumer(GraphiteMetricsConsumer.class, 1);
 - [5 minutes Storm installation guide (single-node setup)](https://vincenzogulisano.com/2015/07/30/5-minutes-storm-installation-guide-single-node-setup/)
 - [Understanding the Parallelism of a Storm Topology](https://www.michael-noll.com/blog/2012/10/16/understanding-the-parallelism-of-a-storm-topology/)
 - [Resource Aware Scheduler](http://storm.apache.org/releases/1.2.2/Resource_Aware_Scheduler_overview.html)
+- [Enabling Site-Aware Scheduling for Apache Storm in ExoGENI](http://www.exogeni.net/2015/04/enabling-site-aware-scheduling-for-apache-storm-in-exogeni/)
 
 
 

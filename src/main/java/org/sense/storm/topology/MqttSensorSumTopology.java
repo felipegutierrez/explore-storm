@@ -17,6 +17,7 @@ import org.sense.storm.metrics.GraphiteMetricsConsumer;
 import org.sense.storm.spout.MqttSensorDetailSpout;
 import org.sense.storm.utils.MqttSensors;
 import org.sense.storm.utils.SensorType;
+import org.sense.storm.utils.TagSite;
 
 public class MqttSensorSumTopology {
 
@@ -57,10 +58,12 @@ public class MqttSensorSumTopology {
 
 		// Spouts: data stream from count ticket and count train sensors
 		topologyBuilder.setSpout(MqttSensors.SPOUT_STATION_01_TICKETS.getValue(), new MqttSensorDetailSpout(MqttSensors.TOPIC_STATION_01_TICKETS.getValue(), fields))
+				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
 				// .setMemoryLoad(512.0)
 				// .setCPULoad(100.0)
 				;
 		topologyBuilder.setSpout(MqttSensors.SPOUT_STATION_01_TRAINS.getValue(), new MqttSensorDetailSpout(MqttSensors.TOPIC_STATION_01_TRAINS.getValue(), fields))
+				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
 				// .setMemoryLoad(512.0)
 				// .setCPULoad(100.0)
 				;
@@ -68,11 +71,13 @@ public class MqttSensorSumTopology {
 		// Bolts to compute the sum of TICKETS and TRAINS
 		topologyBuilder.setBolt(MqttSensors.BOLT_SENSOR_TICKET_SUM.getValue(), new SumSensorValuesWindowBolt(SensorType.COUNTER_TICKETS).withTumblingWindow(Duration.seconds(5)), 1)
 				.shuffleGrouping(MqttSensors.SPOUT_STATION_01_TICKETS.getValue())
+				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
 				// .setMemoryLoad(512.0)
 				// .setCPULoad(10.0)
 				;
 		topologyBuilder.setBolt(MqttSensors.BOLT_SENSOR_TRAIN_SUM.getValue(), new SumSensorValuesWindowBolt(SensorType.COUNTER_TRAINS).withTumblingWindow(Duration.seconds(5)), 1)
 				.shuffleGrouping(MqttSensors.SPOUT_STATION_01_TRAINS.getValue())
+				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
 				// .setMemoryLoad(512.0)
 				// .setCPULoad(10.0)
 				;
@@ -85,10 +90,14 @@ public class MqttSensorSumTopology {
 		 		.withTumblingWindow(new BaseWindowedBolt.Duration(5, TimeUnit.SECONDS));
 		topologyBuilder.setBolt(BOLT_SENSOR_JOINER, joiner)
 				.fieldsGrouping(MqttSensors.BOLT_SENSOR_TICKET_SUM.getValue(), new Fields(MqttSensors.FIELD_PLATFORM_ID.getValue()))
-				.fieldsGrouping(MqttSensors.BOLT_SENSOR_TRAIN_SUM.getValue(), new Fields(MqttSensors.FIELD_PLATFORM_ID.getValue()));
+				.fieldsGrouping(MqttSensors.BOLT_SENSOR_TRAIN_SUM.getValue(), new Fields(MqttSensors.FIELD_PLATFORM_ID.getValue()))
+				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
+				;
 
 		// Printer Bolt
-		topologyBuilder.setBolt(BOLT_SENSOR_PRINT, projection).shuffleGrouping(BOLT_SENSOR_JOINER);
+		topologyBuilder.setBolt(BOLT_SENSOR_PRINT, projection).shuffleGrouping(BOLT_SENSOR_JOINER)
+				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
+				;
 		// @formatter:on
 
 		if (msg != null && msg.equalsIgnoreCase("CLUSTER")) {
