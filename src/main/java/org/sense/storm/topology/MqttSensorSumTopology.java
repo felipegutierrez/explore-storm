@@ -26,13 +26,14 @@ public class MqttSensorSumTopology {
 	private static final String BOLT_SENSOR_JOINER = "bolt-sensor-joiner";
 	private static final String BOLT_SENSOR_PRINT = "bolt-sensor-print";
 
-	public MqttSensorSumTopology(String msg) throws Exception {
+	public MqttSensorSumTopology(String msg, String ipAddress) throws Exception {
 		logger.info(
 				"Topology with AGGREGATE over a window, JOIN and Default Resource Aware Schedule and Metrics selected.");
 
 		// Create Config instance for cluster configuration
 		Config config = new Config();
 		config.setDebug(false);
+		// number of Workers on each node. This is for task parallelism.
 		config.setNumWorkers(2);
 
 		// The memory limit a worker process will be allocated in megabytes
@@ -57,12 +58,12 @@ public class MqttSensorSumTopology {
 				MqttSensors.FIELD_VALUE.getValue());
 
 		// Spouts: data stream from count ticket and count train sensors
-		topologyBuilder.setSpout(MqttSensors.SPOUT_STATION_01_TICKETS.getValue(), new MqttSensorDetailSpout(MqttSensors.TOPIC_STATION_01_TICKETS.getValue(), fields))
+		topologyBuilder.setSpout(MqttSensors.SPOUT_STATION_01_TICKETS.getValue(), new MqttSensorDetailSpout(ipAddress, MqttSensors.TOPIC_STATION_01_TICKETS.getValue(), fields))
 				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
 				// .setMemoryLoad(512.0)
 				// .setCPULoad(100.0)
 				;
-		topologyBuilder.setSpout(MqttSensors.SPOUT_STATION_01_TRAINS.getValue(), new MqttSensorDetailSpout(MqttSensors.TOPIC_STATION_01_TRAINS.getValue(), fields))
+		topologyBuilder.setSpout(MqttSensors.SPOUT_STATION_01_TRAINS.getValue(), new MqttSensorDetailSpout(ipAddress, MqttSensors.TOPIC_STATION_01_TRAINS.getValue(), fields))
 				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
 				// .setMemoryLoad(512.0)
 				// .setCPULoad(100.0)

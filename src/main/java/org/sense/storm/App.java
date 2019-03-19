@@ -24,6 +24,7 @@ public class App {
 
 				String appId = "0";
 				String env = "local";
+				String ipAddress = "127.0.0.1";
 				if (args != null && args.length > 0) {
 					appId = args[0];
 					if (appId.matches("-?\\d+")) {
@@ -38,6 +39,15 @@ public class App {
 							System.out.print(
 									"Please enter [cluster] or [local] to specify where you want to run your application: ");
 							env = (new Scanner(System.in)).nextLine();
+						}
+						if (args.length > 2) {
+							ipAddress = args[2];
+							if (!validIP(ipAddress)) {
+								ipAddress = "127.0.0.1";
+								System.err.println("IP address invalid. Using the default IP address: " + ipAddress);
+							} else {
+								System.out.println("Valid IP address: " + ipAddress);
+							}
 						}
 					}
 				} else {
@@ -59,7 +69,7 @@ public class App {
 					app = 0;
 					break;
 				case 3:
-					new MqttSensorSumTopology(env);
+					new MqttSensorSumTopology(env, ipAddress);
 					app = 0;
 					break;
 				default:
@@ -70,6 +80,33 @@ public class App {
 			} while (app != 0);
 		} catch (Exception ce) {
 			logger.error(ce.getMessage(), ce.getCause());
+		}
+	}
+
+	public static boolean validIP(String ip) {
+		try {
+			if (ip == null || ip.isEmpty()) {
+				return false;
+			}
+
+			String[] parts = ip.split("\\.");
+			if (parts.length != 4) {
+				return false;
+			}
+
+			for (String s : parts) {
+				int i = Integer.parseInt(s);
+				if ((i < 0) || (i > 255)) {
+					return false;
+				}
+			}
+			if (ip.endsWith(".")) {
+				return false;
+			}
+
+			return true;
+		} catch (NumberFormatException nfe) {
+			return false;
 		}
 	}
 }
