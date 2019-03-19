@@ -59,12 +59,12 @@ public class MqttSensorSumTopology {
 
 		// Spouts: data stream from count ticket and count train sensors
 		topologyBuilder.setSpout(MqttSensors.SPOUT_STATION_01_TICKETS.getValue(), new MqttSensorDetailSpout(ipAddress, MqttSensors.TOPIC_STATION_01_TICKETS.getValue(), fields))
-				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
+				.addConfiguration(TagSite.SITE.getValue(), TagSite.EDGE.getValue())
 				// .setMemoryLoad(512.0)
 				// .setCPULoad(100.0)
 				;
 		topologyBuilder.setSpout(MqttSensors.SPOUT_STATION_01_TRAINS.getValue(), new MqttSensorDetailSpout(ipAddress, MqttSensors.TOPIC_STATION_01_TRAINS.getValue(), fields))
-				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
+				.addConfiguration(TagSite.SITE.getValue(), TagSite.EDGE.getValue())
 				// .setMemoryLoad(512.0)
 				// .setCPULoad(100.0)
 				;
