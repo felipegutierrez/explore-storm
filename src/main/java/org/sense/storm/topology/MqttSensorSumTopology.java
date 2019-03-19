@@ -72,13 +72,13 @@ public class MqttSensorSumTopology {
 		// Bolts to compute the sum of TICKETS and TRAINS
 		topologyBuilder.setBolt(MqttSensors.BOLT_SENSOR_TICKET_SUM.getValue(), new SumSensorValuesWindowBolt(SensorType.COUNTER_TICKETS).withTumblingWindow(Duration.seconds(5)), 1)
 				.shuffleGrouping(MqttSensors.SPOUT_STATION_01_TICKETS.getValue())
-				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
+				.addConfiguration(TagSite.SITE.getValue(), TagSite.EDGE.getValue())
 				// .setMemoryLoad(512.0)
 				// .setCPULoad(10.0)
 				;
 		topologyBuilder.setBolt(MqttSensors.BOLT_SENSOR_TRAIN_SUM.getValue(), new SumSensorValuesWindowBolt(SensorType.COUNTER_TRAINS).withTumblingWindow(Duration.seconds(5)), 1)
 				.shuffleGrouping(MqttSensors.SPOUT_STATION_01_TRAINS.getValue())
-				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
+				.addConfiguration(TagSite.SITE.getValue(), TagSite.EDGE.getValue())
 				// .setMemoryLoad(512.0)
 				// .setCPULoad(10.0)
 				;
