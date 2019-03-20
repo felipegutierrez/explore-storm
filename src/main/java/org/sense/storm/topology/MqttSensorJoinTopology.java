@@ -14,6 +14,11 @@ import org.sense.storm.bolt.SensorJoinTicketTrainPrinterBolt;
 import org.sense.storm.spout.MqttSensorDetailSpout;
 import org.sense.storm.utils.MqttSensors;
 
+import com.github.staslev.storm.metrics.MetricReporter;
+import com.github.staslev.storm.metrics.MetricReporterConfig;
+import com.github.staslev.storm.metrics.yammer.SimpleGraphiteStormMetricProcessor;
+import com.github.staslev.storm.metrics.yammer.YammerFacadeMetric;
+
 public class MqttSensorJoinTopology {
 
 	final static Logger logger = Logger.getLogger(MqttSensorJoinTopology.class);
@@ -21,11 +26,20 @@ public class MqttSensorJoinTopology {
 	private static final String BOLT_SENSOR_JOINER = "bolt-sensor-joiner";
 	private static final String BOLT_SENSOR_PRINT = "bolt-sensor-print";
 
-	public MqttSensorJoinTopology(String msg) throws Exception {
+	public MqttSensorJoinTopology(String msg, String ipAddress) throws Exception {
 		logger.info("Topology with JOIN and WINDOW selected.");
 		// Create Config instance for cluster configuration
 		Config config = new Config();
 		config.setDebug(false);
+
+		// Profiling Resource Usage: Log all storm metrics
+		config.put(YammerFacadeMetric.FACADE_METRIC_TIME_BUCKET_IN_SEC, 30);
+		config.put(SimpleGraphiteStormMetricProcessor.GRAPHITE_HOST, "127.0.0.1");
+		config.put(SimpleGraphiteStormMetricProcessor.GRAPHITE_PORT, 2003);
+		config.put(SimpleGraphiteStormMetricProcessor.REPORT_PERIOD_IN_SEC, 10);
+		config.put(Config.TOPOLOGY_NAME, MqttSensorJoinTopology.class.getCanonicalName());
+		config.registerMetricsConsumer(MetricReporter.class,
+				new MetricReporterConfig(".*", SimpleGraphiteStormMetricProcessor.class.getCanonicalName()), 1);
 
 		TopologyBuilder builder = new TopologyBuilder();
 
@@ -40,8 +54,8 @@ public class MqttSensorJoinTopology {
 
 		
 		// Spouts: data stream from count ticket and count train sensors
-		builder.setSpout(MqttSensors.SPOUT_STATION_01_TICKETS.getValue(), new MqttSensorDetailSpout(MqttSensors.TOPIC_STATION_01_TICKETS.getValue(), fields));
-		builder.setSpout(MqttSensors.SPOUT_STATION_01_TRAINS.getValue(), new MqttSensorDetailSpout(MqttSensors.TOPIC_STATION_01_TRAINS.getValue(), fields));
+		builder.setSpout(MqttSensors.SPOUT_STATION_01_TICKETS.getValue(), new MqttSensorDetailSpout(ipAddress, MqttSensors.TOPIC_STATION_01_TICKETS.getValue(), fields));
+		builder.setSpout(MqttSensors.SPOUT_STATION_01_TRAINS.getValue(), new MqttSensorDetailSpout(ipAddress, MqttSensors.TOPIC_STATION_01_TRAINS.getValue(), fields));
 
 		// Joiner Bolt
 		SensorJoinTicketTrainPrinterBolt projection = new SensorJoinTicketTrainPrinterBolt(1);
@@ -59,7 +73,6 @@ public class MqttSensorJoinTopology {
 
 		if (msg != null && msg.equalsIgnoreCase("CLUSTER")) {
 			logger.info("Running on the cluster");
-			config.setNumWorkers(1);
 			StormSubmitter.submitTopologyWithProgressBar("MqttSensorJoinTopology", config, builder.createTopology());
 		} else {
 			logger.info("Running on local machine");

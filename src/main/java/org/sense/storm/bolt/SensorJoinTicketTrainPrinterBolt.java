@@ -13,6 +13,9 @@ import org.apache.storm.topology.base.BaseRichBolt;
 import org.apache.storm.tuple.Tuple;
 import org.sense.storm.utils.MqttSensors;
 
+import com.github.staslev.storm.metrics.yammer.StormYammerMetricsAdapter;
+import com.yammer.metrics.core.MetricsRegistry;
+
 public class SensorJoinTicketTrainPrinterBolt extends BaseRichBolt {
 
 	private static final long serialVersionUID = 7146201246991885765L;
@@ -33,6 +36,7 @@ public class SensorJoinTicketTrainPrinterBolt extends BaseRichBolt {
 
 	@Override
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
+		StormYammerMetricsAdapter.configure(stormConf, context, new MetricsRegistry());
 		this.collector = collector;
 		this.result = new ArrayList<String>();
 		this.name = context.getThisComponentId();

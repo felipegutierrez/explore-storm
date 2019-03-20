@@ -65,7 +65,7 @@ public class App {
 					app = 0;
 					break;
 				case 2:
-					new MqttSensorJoinTopology(env);
+					new MqttSensorJoinTopology(env, ipAddress);
 					app = 0;
 					break;
 				case 3:

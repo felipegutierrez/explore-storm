@@ -16,6 +16,9 @@ import org.fusesource.mqtt.client.Message;
 import org.fusesource.mqtt.client.QoS;
 import org.fusesource.mqtt.client.Topic;
 
+import com.github.staslev.storm.metrics.yammer.StormYammerMetricsAdapter;
+import com.yammer.metrics.core.MetricsRegistry;
+
 public class MqttSensorDetailSpout extends BaseRichSpout {
 
 	final static Logger logger = Logger.getLogger(MqttSensorDetailSpout.class);
@@ -59,6 +62,7 @@ public class MqttSensorDetailSpout extends BaseRichSpout {
 	}
 
 	public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
+		StormYammerMetricsAdapter.configure(conf, context, new MetricsRegistry());
 		this.context = context;
 		this.collector = collector;
 

@@ -13,11 +13,15 @@ import org.apache.storm.topology.base.BaseWindowedBolt.Duration;
 import org.apache.storm.tuple.Fields;
 import org.sense.storm.bolt.SensorJoinTicketTrainPrinterBolt;
 import org.sense.storm.bolt.SumSensorValuesWindowBolt;
-import org.sense.storm.metrics.GraphiteMetricsConsumer;
 import org.sense.storm.spout.MqttSensorDetailSpout;
 import org.sense.storm.utils.MqttSensors;
 import org.sense.storm.utils.SensorType;
 import org.sense.storm.utils.TagSite;
+
+import com.github.staslev.storm.metrics.MetricReporter;
+import com.github.staslev.storm.metrics.MetricReporterConfig;
+import com.github.staslev.storm.metrics.yammer.SimpleGraphiteStormMetricProcessor;
+import com.github.staslev.storm.metrics.yammer.YammerFacadeMetric;
 
 public class MqttSensorSumTopology {
 
@@ -40,10 +44,13 @@ public class MqttSensorSumTopology {
 		// config.setTopologyWorkerMaxHeapSize(512.0);
 
 		// Profiling Resource Usage: Log all storm metrics
-		config.put(GraphiteMetricsConsumer.REPORTER_NAME, "MqttSensorSumTopology-SiteAware");
-		config.put(GraphiteMetricsConsumer.GRAPHITE_HOST, "192.168.56.1");
-		config.put(GraphiteMetricsConsumer.GRAPHITE_PORT, "2003");
-		config.registerMetricsConsumer(GraphiteMetricsConsumer.class, 1);
+		config.put(YammerFacadeMetric.FACADE_METRIC_TIME_BUCKET_IN_SEC, 30);
+		config.put(SimpleGraphiteStormMetricProcessor.GRAPHITE_HOST, "127.0.0.1");
+		config.put(SimpleGraphiteStormMetricProcessor.GRAPHITE_PORT, 2003);
+		config.put(SimpleGraphiteStormMetricProcessor.REPORT_PERIOD_IN_SEC, 10);
+		config.put(Config.TOPOLOGY_NAME, MqttSensorSumTopology.class.getCanonicalName());
+		config.registerMetricsConsumer(MetricReporter.class,
+				new MetricReporterConfig(".*", SimpleGraphiteStormMetricProcessor.class.getCanonicalName()), 1);
 
 		// Data stream topology
 		TopologyBuilder topologyBuilder = new TopologyBuilder();
@@ -59,12 +66,12 @@ public class MqttSensorSumTopology {
 
 		// Spouts: data stream from count ticket and count train sensors
 		topologyBuilder.setSpout(MqttSensors.SPOUT_STATION_01_TICKETS.getValue(), new MqttSensorDetailSpout(ipAddress, MqttSensors.TOPIC_STATION_01_TICKETS.getValue(), fields))
-				.addConfiguration(TagSite.SITE.getValue(), TagSite.EDGE.getValue())
+				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
 				// .setMemoryLoad(512.0)
 				// .setCPULoad(100.0)
 				;
 		topologyBuilder.setSpout(MqttSensors.SPOUT_STATION_01_TRAINS.getValue(), new MqttSensorDetailSpout(ipAddress, MqttSensors.TOPIC_STATION_01_TRAINS.getValue(), fields))
-				.addConfiguration(TagSite.SITE.getValue(), TagSite.EDGE.getValue())
+				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
 				// .setMemoryLoad(512.0)
 				// .setCPULoad(100.0)
 				;
@@ -72,13 +79,13 @@ public class MqttSensorSumTopology {
 		// Bolts to compute the sum of TICKETS and TRAINS
 		topologyBuilder.setBolt(MqttSensors.BOLT_SENSOR_TICKET_SUM.getValue(), new SumSensorValuesWindowBolt(SensorType.COUNTER_TICKETS).withTumblingWindow(Duration.seconds(5)), 1)
 				.shuffleGrouping(MqttSensors.SPOUT_STATION_01_TICKETS.getValue())
-				.addConfiguration(TagSite.SITE.getValue(), TagSite.EDGE.getValue())
+				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
 				// .setMemoryLoad(512.0)
 				// .setCPULoad(10.0)
 				;
 		topologyBuilder.setBolt(MqttSensors.BOLT_SENSOR_TRAIN_SUM.getValue(), new SumSensorValuesWindowBolt(SensorType.COUNTER_TRAINS).withTumblingWindow(Duration.seconds(5)), 1)
 				.shuffleGrouping(MqttSensors.SPOUT_STATION_01_TRAINS.getValue())
-				.addConfiguration(TagSite.SITE.getValue(), TagSite.EDGE.getValue())
+				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
 				// .setMemoryLoad(512.0)
 				// .setCPULoad(10.0)
 				;
@@ -103,7 +110,6 @@ public class MqttSensorSumTopology {
 
 		if (msg != null && msg.equalsIgnoreCase("CLUSTER")) {
 			logger.info("Running on the cluster");
-			config.setNumWorkers(1);
 			StormSubmitter.submitTopologyWithProgressBar("MqttSensorSumTopology", config,
 					topologyBuilder.createTopology());
 		} else {

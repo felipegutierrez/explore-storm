@@ -101,10 +101,6 @@
           <artifactId>servlet-api</artifactId>
           <groupId>javax.servlet</groupId>
         </exclusion>
-        <exclusion>
-          <artifactId>slf4j-api</artifactId>
-          <groupId>org.slf4j</groupId>
-        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
