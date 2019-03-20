@@ -88,12 +88,24 @@ To add an extendable scheduler on Storm you have to implement the `IScheduler` i
 ```
 supervisor.scheduler.meta:
   site: "cluster"
+  # site: "edge"
 storm.scheduler: "org.sense.storm.scheduler.SiteAwareScheduler"
 ```
-or
+Then configure your topology to be computed on the specific worker.
+```
+topologyBuilder.setBolt(...)
+	.shuffleGrouping(...)
+	.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue());
+topologyBuilder.setBolt(...)
+        .shuffleGrouping(...)
+        .addConfiguration(TagSite.SITE.getValue(), TagSite.EDGE.getValue());
+```
+Or use the defaul ResourceAwareScheduler provided by Storm.
 ```
 storm.scheduler: "org.apache.storm.scheduler.resource.ResourceAwareScheduler"
 ```
+
+
 And restart all the storm services on the cluster
 
 

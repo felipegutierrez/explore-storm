@@ -83,69 +83,70 @@ public class SiteAwareScheduler implements IScheduler {
 				// Map<String, List<ExecutorDetails>> executorsByComponent =
 				// cluster.getNeedsSchedulingComponentToExecutors(topologyDetails);
 
-				Map<String, ArrayList<String>> componentsByMeta = new HashMap<String, ArrayList<String>>();
-				populateComponentsByMetadata(componentsByMeta, bolts);
-				populateComponentsByMetadata(componentsByMeta, spouts);
+				Map<String, ArrayList<String>> componentsByMetadata = new HashMap<String, ArrayList<String>>();
+				populateComponentsByMetadata(componentsByMetadata, bolts);
+				populateComponentsByMetadata(componentsByMetadata, spouts);
 				// populateComponentsByTagWithStormInternals(componentsByTag,executorsByComponent.keySet());
 
 				// 4
 				Map<String, ArrayList<ExecutorDetails>> executorsToBeScheduledByMeta = getExecutorsToBeScheduledBySite(
-						cluster, topologyDetails, componentsByMeta);
+						cluster, topologyDetails, componentsByMetadata);
 
 				// 5
 				Map<WorkerSlot, ArrayList<ExecutorDetails>> componentExecutorsToSlotsMap = new HashMap<WorkerSlot, ArrayList<ExecutorDetails>>();
 
 				// 6
-				for (Entry<String, ArrayList<ExecutorDetails>> entry : executorsToBeScheduledByMeta.entrySet()) {
-					String meta = entry.getKey();
-
-					ArrayList<ExecutorDetails> executorsForSite = entry.getValue();
-					ArrayList<SupervisorDetails> supervisorsForSite = supervisorsByMeta.get(meta);
-					ArrayList<String> componentsForSite = componentsByMeta.get(meta);
+				for (Entry<String, ArrayList<ExecutorDetails>> executorDetails : executorsToBeScheduledByMeta
+						.entrySet()) {
+					String executorMetadataKey = executorDetails.getKey();
+					ArrayList<ExecutorDetails> executorsForSite = executorDetails.getValue();
+					ArrayList<SupervisorDetails> supervisorsForSite = supervisorsByMeta.get(executorMetadataKey);
+					ArrayList<String> componentsForSite = componentsByMetadata.get(executorMetadataKey);
 
 					if (supervisorsForSite == null) {
 						// This is bad, we don't have any supervisors but have executors to assign!
 						String message = String.format(
 								"No supervisors given for executors %s of topology %s and metadata %s (components: %s)",
-								executorsForSite, topologyID, meta, componentsForSite);
+								executorsForSite, topologyID, executorMetadataKey, componentsForSite);
 						handleUnsuccessfulScheduling(cluster, topologyDetails, message);
 					}
 
 					List<WorkerSlot> slotsToAssign = getSlotsToAssign(cluster, topologyDetails, supervisorsForSite,
-							componentsForSite, meta);
+							componentsForSite, executorMetadataKey);
 
 					// 7
-					Map<WorkerSlot, ArrayList<ExecutorDetails>> executorsBySlot = new HashMap<WorkerSlot, ArrayList<ExecutorDetails>>();
+					Map<WorkerSlot, ArrayList<ExecutorDetails>> executorsByWorkerSlot = new HashMap<WorkerSlot, ArrayList<ExecutorDetails>>();
 					int numberOfSlots = slotsToAssign.size();
 					System.out.println("slotsToAssign.size(): " + slotsToAssign.size());
 					for (int i = 0; i < executorsForSite.size(); i++) {
 						WorkerSlot slotToAssign = slotsToAssign.get(i % numberOfSlots);
 						ExecutorDetails executorToAssign = executorsForSite.get(i);
-						if (executorsBySlot.containsKey(slotToAssign)) {
-							executorsBySlot.get(slotToAssign).add(executorToAssign);
+						if (executorsByWorkerSlot.containsKey(slotToAssign)) {
+							executorsByWorkerSlot.get(slotToAssign).add(executorToAssign);
 						} else {
 							ArrayList<ExecutorDetails> newExecutorList = new ArrayList<ExecutorDetails>();
 							newExecutorList.add(executorToAssign);
-							executorsBySlot.put(slotToAssign, newExecutorList);
+							executorsByWorkerSlot.put(slotToAssign, newExecutorList);
 						}
 					}
 
 					// 8
-					for (Entry<WorkerSlot, ArrayList<ExecutorDetails>> entryExecutor : executorsBySlot.entrySet()) {
-						WorkerSlot slotToAssign = entryExecutor.getKey();
-						ArrayList<ExecutorDetails> executorsToAssign = entryExecutor.getValue();
-						componentExecutorsToSlotsMap.put(slotToAssign, executorsToAssign);
+					for (Entry<WorkerSlot, ArrayList<ExecutorDetails>> workerSlotAndExecutors : executorsByWorkerSlot
+							.entrySet()) {
+						WorkerSlot workerSlotToAssign = workerSlotAndExecutors.getKey();
+						ArrayList<ExecutorDetails> executorsToAssign = workerSlotAndExecutors.getValue();
+						componentExecutorsToSlotsMap.put(workerSlotToAssign, executorsToAssign);
 					}
 				}
 
 				// 9
 				for (Entry<WorkerSlot, ArrayList<ExecutorDetails>> entry : componentExecutorsToSlotsMap.entrySet()) {
-					WorkerSlot slotToAssign = entry.getKey();
+					WorkerSlot workerSlotToAssign = entry.getKey();
 					ArrayList<ExecutorDetails> executorsToAssign = entry.getValue();
-					cluster.assign(slotToAssign, topologyID, executorsToAssign);
+					cluster.assign(workerSlotToAssign, topologyID, executorsToAssign);
 				}
 				// 10
-				cluster.setStatus(topologyID, "SCHEDULING SUCCESSFUL");
+				cluster.setStatus(topologyID, "SCHEDULING SUCCESSFUL for topology " + topologyID);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -288,11 +289,12 @@ public class SiteAwareScheduler implements IScheduler {
 	 * 
 	 * @param cluster
 	 * @param topologyDetails
-	 * @param componentsPerTag
+	 * @param componentsByMetadata
 	 * @return
 	 */
 	private Map<String, ArrayList<ExecutorDetails>> getExecutorsToBeScheduledBySite(Cluster cluster,
-			TopologyDetails topologyDetails, Map<String, ArrayList<String>> componentsPerTag) {
+			TopologyDetails topologyDetails, Map<String, ArrayList<String>> componentsByMetadata) {
+		System.out.println("4 - getExecutorsToBeScheduledBySite");
 		// This is the list of executors (site -> executors). A executor is a thread
 		// that runs inside the Worker Process.
 		Map<String, ArrayList<ExecutorDetails>> executorsBySite = new HashMap<String, ArrayList<ExecutorDetails>>();
@@ -312,17 +314,21 @@ public class SiteAwareScheduler implements IScheduler {
 
 		// Iterate over the componentsPerTag created before in order to populate the
 		// executorsByTag
-		for (Entry<String, ArrayList<String>> tagComponent : componentsPerTag.entrySet()) {
-			String tag = tagComponent.getKey();
+		for (Entry<String, ArrayList<String>> metadataComponent : componentsByMetadata.entrySet()) {
+			String metadataKey = metadataComponent.getKey();
 			ArrayList<ExecutorDetails> executorsForTag = new ArrayList<ExecutorDetails>();
+			System.out.println("metadataKey: " + metadataKey);
 
-			for (String componentID : tagComponent.getValue()) {
+			for (String metadataValue : metadataComponent.getValue()) {
 				// Fetch the executors for the current component ID
-				List<ExecutorDetails> executorsForComponent = executorsByComponent.get(componentID);
+				List<ExecutorDetails> executorsForComponent = executorsByComponent.get(metadataValue);
+				System.out.println(
+						"Get list of ExecutorDetails with metadata[" + metadataValue + "]: " + executorsForComponent);
 
 				if (executorsForComponent == null) {
 					continue;
 				}
+				System.out.println("size: " + executorsForComponent.size());
 
 				// Convert the list of executors to a set
 				Set<ExecutorDetails> executorsToAssignForComponent = new HashSet<ExecutorDetails>(
@@ -341,7 +347,7 @@ public class SiteAwareScheduler implements IScheduler {
 			// Populate the map of executors by tag after looping through all of the tag's
 			// components, if there are any executors to be scheduled
 			if (!executorsForTag.isEmpty()) {
-				executorsBySite.put(tag, executorsForTag);
+				executorsBySite.put(metadataKey, executorsForTag);
 			}
 		}
 		return executorsBySite;

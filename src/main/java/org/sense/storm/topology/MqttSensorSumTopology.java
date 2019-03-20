@@ -40,8 +40,8 @@ public class MqttSensorSumTopology {
 		// config.setTopologyWorkerMaxHeapSize(512.0);
 
 		// Profiling Resource Usage: Log all storm metrics
-		config.put(GraphiteMetricsConsumer.REPORTER_NAME, "MqttSensorSumTopology");
-		config.put(GraphiteMetricsConsumer.GRAPHITE_HOST, "127.0.0.1");
+		config.put(GraphiteMetricsConsumer.REPORTER_NAME, "MqttSensorSumTopology-SiteAware");
+		config.put(GraphiteMetricsConsumer.GRAPHITE_HOST, "192.168.56.1");
 		config.put(GraphiteMetricsConsumer.GRAPHITE_PORT, "2003");
 		config.registerMetricsConsumer(GraphiteMetricsConsumer.class, 1);
 
