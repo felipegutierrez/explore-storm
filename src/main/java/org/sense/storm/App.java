@@ -24,7 +24,7 @@ public class App {
 
 				String appId = "0";
 				String env = "local";
-				String ipAddress = "127.0.0.1";
+				String ipAddressSource01 = "127.0.0.1";
 				if (args != null && args.length > 0) {
 					appId = args[0];
 					if (appId.matches("-?\\d+")) {
@@ -41,12 +41,12 @@ public class App {
 							env = (new Scanner(System.in)).nextLine();
 						}
 						if (args.length > 2) {
-							ipAddress = args[2];
-							if (!validIP(ipAddress)) {
-								ipAddress = "127.0.0.1";
-								System.err.println("IP address invalid. Using the default IP address: " + ipAddress);
+							ipAddressSource01 = args[2];
+							if (!validIP(ipAddressSource01)) {
+								ipAddressSource01 = "127.0.0.1";
+								System.err.println("IP address invalid. Using the default IP address: " + ipAddressSource01);
 							} else {
-								System.out.println("Valid IP address: " + ipAddress);
+								System.out.println("Valid IP address: " + ipAddressSource01);
 							}
 						}
 					}
@@ -65,11 +65,11 @@ public class App {
 					app = 0;
 					break;
 				case 2:
-					new MqttSensorJoinTopology(env, ipAddress);
+					new MqttSensorJoinTopology(env, ipAddressSource01);
 					app = 0;
 					break;
 				case 3:
-					new MqttSensorSumTopology(env, ipAddress);
+					new MqttSensorSumTopology(env, ipAddressSource01);
 					app = 0;
 					break;
 				default:

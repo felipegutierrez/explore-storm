@@ -26,7 +26,7 @@ public class MqttSensorJoinTopology {
 	private static final String BOLT_SENSOR_JOINER = "bolt-sensor-joiner";
 	private static final String BOLT_SENSOR_PRINT = "bolt-sensor-print";
 
-	public MqttSensorJoinTopology(String msg, String ipAddress) throws Exception {
+	public MqttSensorJoinTopology(String msg, String ipAddressSource01) throws Exception {
 		logger.info("Topology with JOIN and WINDOW selected.");
 		// Create Config instance for cluster configuration
 		Config config = new Config();
@@ -34,7 +34,7 @@ public class MqttSensorJoinTopology {
 
 		// Profiling Resource Usage: Log all storm metrics
 		config.put(YammerFacadeMetric.FACADE_METRIC_TIME_BUCKET_IN_SEC, 30);
-		config.put(SimpleGraphiteStormMetricProcessor.GRAPHITE_HOST, "127.0.0.1");
+		config.put(SimpleGraphiteStormMetricProcessor.GRAPHITE_HOST, "192.168.56.1");
 		config.put(SimpleGraphiteStormMetricProcessor.GRAPHITE_PORT, 2003);
 		config.put(SimpleGraphiteStormMetricProcessor.REPORT_PERIOD_IN_SEC, 10);
 		config.put(Config.TOPOLOGY_NAME, MqttSensorJoinTopology.class.getCanonicalName());
@@ -52,10 +52,9 @@ public class MqttSensorJoinTopology {
 				MqttSensors.FIELD_STATION_ID.getValue(), 
 				MqttSensors.FIELD_VALUE.getValue());
 
-		
 		// Spouts: data stream from count ticket and count train sensors
-		builder.setSpout(MqttSensors.SPOUT_STATION_01_TICKETS.getValue(), new MqttSensorDetailSpout(ipAddress, MqttSensors.TOPIC_STATION_01_TICKETS.getValue(), fields));
-		builder.setSpout(MqttSensors.SPOUT_STATION_01_TRAINS.getValue(), new MqttSensorDetailSpout(ipAddress, MqttSensors.TOPIC_STATION_01_TRAINS.getValue(), fields));
+		builder.setSpout(MqttSensors.SPOUT_STATION_01_TICKETS.getValue(), new MqttSensorDetailSpout(ipAddressSource01, MqttSensors.TOPIC_STATION_01_TICKETS.getValue(), fields));
+		builder.setSpout(MqttSensors.SPOUT_STATION_01_TRAINS.getValue(), new MqttSensorDetailSpout(ipAddressSource01, MqttSensors.TOPIC_STATION_01_TRAINS.getValue(), fields));
 
 		// Joiner Bolt
 		SensorJoinTicketTrainPrinterBolt projection = new SensorJoinTicketTrainPrinterBolt(1);

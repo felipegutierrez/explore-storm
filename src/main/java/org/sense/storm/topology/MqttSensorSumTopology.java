@@ -30,7 +30,7 @@ public class MqttSensorSumTopology {
 	private static final String BOLT_SENSOR_JOINER = "bolt-sensor-joiner";
 	private static final String BOLT_SENSOR_PRINT = "bolt-sensor-print";
 
-	public MqttSensorSumTopology(String msg, String ipAddress) throws Exception {
+	public MqttSensorSumTopology(String msg, String ipAddressSource01) throws Exception {
 		logger.info(
 				"Topology with AGGREGATE over a window, JOIN and Default Resource Aware Schedule and Metrics selected.");
 
@@ -45,7 +45,7 @@ public class MqttSensorSumTopology {
 
 		// Profiling Resource Usage: Log all storm metrics
 		config.put(YammerFacadeMetric.FACADE_METRIC_TIME_BUCKET_IN_SEC, 30);
-		config.put(SimpleGraphiteStormMetricProcessor.GRAPHITE_HOST, "127.0.0.1");
+		config.put(SimpleGraphiteStormMetricProcessor.GRAPHITE_HOST, "192.168.56.1");
 		config.put(SimpleGraphiteStormMetricProcessor.GRAPHITE_PORT, 2003);
 		config.put(SimpleGraphiteStormMetricProcessor.REPORT_PERIOD_IN_SEC, 10);
 		config.put(Config.TOPOLOGY_NAME, MqttSensorSumTopology.class.getCanonicalName());
@@ -65,30 +65,18 @@ public class MqttSensorSumTopology {
 				MqttSensors.FIELD_VALUE.getValue());
 
 		// Spouts: data stream from count ticket and count train sensors
-		topologyBuilder.setSpout(MqttSensors.SPOUT_STATION_01_TICKETS.getValue(), new MqttSensorDetailSpout(ipAddress, MqttSensors.TOPIC_STATION_01_TICKETS.getValue(), fields))
-				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
-				// .setMemoryLoad(512.0)
-				// .setCPULoad(100.0)
-				;
-		topologyBuilder.setSpout(MqttSensors.SPOUT_STATION_01_TRAINS.getValue(), new MqttSensorDetailSpout(ipAddress, MqttSensors.TOPIC_STATION_01_TRAINS.getValue(), fields))
-				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
-				// .setMemoryLoad(512.0)
-				// .setCPULoad(100.0)
-				;
+		topologyBuilder.setSpout(MqttSensors.SPOUT_STATION_01_TICKETS.getValue(), new MqttSensorDetailSpout(ipAddressSource01, MqttSensors.TOPIC_STATION_01_TICKETS.getValue(), fields))
+				.addConfiguration(TagSite.SITE.getValue(), TagSite.EDGE.getValue());
+		topologyBuilder.setSpout(MqttSensors.SPOUT_STATION_01_TRAINS.getValue(), new MqttSensorDetailSpout(ipAddressSource01, MqttSensors.TOPIC_STATION_01_TRAINS.getValue(), fields))
+				.addConfiguration(TagSite.SITE.getValue(), TagSite.EDGE.getValue());
 
 		// Bolts to compute the sum of TICKETS and TRAINS
 		topologyBuilder.setBolt(MqttSensors.BOLT_SENSOR_TICKET_SUM.getValue(), new SumSensorValuesWindowBolt(SensorType.COUNTER_TICKETS).withTumblingWindow(Duration.seconds(5)), 1)
 				.shuffleGrouping(MqttSensors.SPOUT_STATION_01_TICKETS.getValue())
-				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
-				// .setMemoryLoad(512.0)
-				// .setCPULoad(10.0)
-				;
+				.addConfiguration(TagSite.SITE.getValue(), TagSite.EDGE.getValue());
 		topologyBuilder.setBolt(MqttSensors.BOLT_SENSOR_TRAIN_SUM.getValue(), new SumSensorValuesWindowBolt(SensorType.COUNTER_TRAINS).withTumblingWindow(Duration.seconds(5)), 1)
 				.shuffleGrouping(MqttSensors.SPOUT_STATION_01_TRAINS.getValue())
-				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
-				// .setMemoryLoad(512.0)
-				// .setCPULoad(10.0)
-				;
+				.addConfiguration(TagSite.SITE.getValue(), TagSite.EDGE.getValue());
 
 		// Joiner Bolt
 		SensorJoinTicketTrainPrinterBolt projection = new SensorJoinTicketTrainPrinterBolt(2);
@@ -99,13 +87,11 @@ public class MqttSensorSumTopology {
 		topologyBuilder.setBolt(BOLT_SENSOR_JOINER, joiner)
 				.fieldsGrouping(MqttSensors.BOLT_SENSOR_TICKET_SUM.getValue(), new Fields(MqttSensors.FIELD_PLATFORM_ID.getValue()))
 				.fieldsGrouping(MqttSensors.BOLT_SENSOR_TRAIN_SUM.getValue(), new Fields(MqttSensors.FIELD_PLATFORM_ID.getValue()))
-				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
-				;
+				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue());
 
 		// Printer Bolt
 		topologyBuilder.setBolt(BOLT_SENSOR_PRINT, projection).shuffleGrouping(BOLT_SENSOR_JOINER)
-				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
-				;
+				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue());
 		// @formatter:on
 
 		if (msg != null && msg.equalsIgnoreCase("CLUSTER")) {
@@ -118,7 +104,6 @@ public class MqttSensorSumTopology {
 			LocalCluster cluster = new LocalCluster();
 			cluster.submitTopology("MqttSensorSumTopology", config, topologyBuilder.createTopology());
 			Thread.sleep(60000);
-
 			// Stop the topology
 			cluster.shutdown();
 		}
