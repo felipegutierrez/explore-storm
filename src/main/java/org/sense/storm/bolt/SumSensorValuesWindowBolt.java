@@ -15,9 +15,6 @@ import org.apache.storm.windowing.TupleWindow;
 import org.sense.storm.utils.MqttSensors;
 import org.sense.storm.utils.SensorType;
 
-import com.github.staslev.storm.metrics.yammer.StormYammerMetricsAdapter;
-import com.yammer.metrics.core.MetricsRegistry;
-
 /**
  * This is a Bolt implementation that sum all values from sensors of the same
  * type.
@@ -38,7 +35,6 @@ public class SumSensorValuesWindowBolt extends BaseWindowedBolt {
 
 	@Override
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
-		StormYammerMetricsAdapter.configure(stormConf, context, new MetricsRegistry());
 		this.collector = collector;
 	}
 

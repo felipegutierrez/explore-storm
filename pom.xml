@@ -25,12 +25,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.github.staslev</groupId>
-			<artifactId>storm-metrics-reporter</artifactId>
-			<version>1.5.0</version>
-		</dependency>
-
-		<dependency>
 			<groupId>org.fusesource.mqtt-client</groupId>
 			<artifactId>mqtt-client</artifactId>
 			<version>1.14</version>

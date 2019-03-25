@@ -14,11 +14,6 @@ import org.sense.storm.bolt.SensorJoinTicketTrainPrinterBolt;
 import org.sense.storm.spout.MqttSensorDetailSpout;
 import org.sense.storm.utils.MqttSensors;
 
-import com.github.staslev.storm.metrics.MetricReporter;
-import com.github.staslev.storm.metrics.MetricReporterConfig;
-import com.github.staslev.storm.metrics.yammer.SimpleGraphiteStormMetricProcessor;
-import com.github.staslev.storm.metrics.yammer.YammerFacadeMetric;
-
 public class MqttSensorJoinTopology {
 
 	final static Logger logger = Logger.getLogger(MqttSensorJoinTopology.class);
@@ -33,13 +28,6 @@ public class MqttSensorJoinTopology {
 		config.setDebug(false);
 
 		// Profiling Resource Usage: Log all storm metrics
-		config.put(YammerFacadeMetric.FACADE_METRIC_TIME_BUCKET_IN_SEC, 30);
-		config.put(SimpleGraphiteStormMetricProcessor.GRAPHITE_HOST, "192.168.56.1");
-		config.put(SimpleGraphiteStormMetricProcessor.GRAPHITE_PORT, 2003);
-		config.put(SimpleGraphiteStormMetricProcessor.REPORT_PERIOD_IN_SEC, 10);
-		config.put(Config.TOPOLOGY_NAME, MqttSensorJoinTopology.class.getCanonicalName());
-		config.registerMetricsConsumer(MetricReporter.class,
-				new MetricReporterConfig(".*", SimpleGraphiteStormMetricProcessor.class.getCanonicalName()), 1);
 
 		TopologyBuilder builder = new TopologyBuilder();
 

@@ -32,9 +32,13 @@ public class SiteAwareScheduler implements IScheduler {
 
 	final static Logger logger = Logger.getLogger(SiteAwareScheduler.class);
 
-	@Override
-	public void prepare(Map conf) {
+	@SuppressWarnings("rawtypes")
+	private Map conf;
 
+	@Override
+	@SuppressWarnings("rawtypes")
+	public void prepare(Map conf) {
+		this.conf = conf;
 	}
 
 	/**
