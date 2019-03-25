@@ -15,6 +15,7 @@ import org.apache.storm.windowing.TupleWindow;
 import org.sense.storm.utils.MqttSensors;
 import org.sense.storm.utils.SensorType;
 
+import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 
@@ -31,6 +32,7 @@ public class SumSensorValuesWindowBolt extends BaseWindowedBolt {
 	private SensorType sensorType;
 	private Meter tupleMeter;
 	private Timer tupleTimer;
+	private Histogram tupleHistogram;
 
 	public SumSensorValuesWindowBolt(SensorType sensorType) {
 		this.sensorType = sensorType;
@@ -41,6 +43,7 @@ public class SumSensorValuesWindowBolt extends BaseWindowedBolt {
 		this.collector = collector;
 		this.tupleMeter = context.registerMeter("meterSum-" + this.sensorType.getValue());
 		this.tupleTimer = context.registerTimer("timerSum-" + this.sensorType.getValue());
+		this.tupleHistogram = context.registerHistogram("histogramSum-" + this.sensorType.getValue());
 	}
 
 	@Override

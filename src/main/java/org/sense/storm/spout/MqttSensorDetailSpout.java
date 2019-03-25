@@ -16,6 +16,7 @@ import org.fusesource.mqtt.client.Message;
 import org.fusesource.mqtt.client.QoS;
 import org.fusesource.mqtt.client.Topic;
 
+import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 
@@ -43,6 +44,7 @@ public class MqttSensorDetailSpout extends BaseRichSpout {
 
 	private Meter tupleMeter;
 	private Timer tupleTimer;
+	private Histogram tupleHistogram;
 
 	public MqttSensorDetailSpout(String topic, Fields outFields) {
 		this(DEFAUL_HOST, DEFAUL_PORT, topic, QoS.AT_LEAST_ONCE, outFields);
@@ -69,6 +71,8 @@ public class MqttSensorDetailSpout extends BaseRichSpout {
 		this.collector = collector;
 		this.tupleMeter = context.registerMeter("meterSpout-" + this.topic);
 		this.tupleTimer = context.registerTimer("timerSpout-" + this.topic);
+		this.tupleHistogram = context.registerHistogram("histogramSpout-" + this.topic);
+
 		MQTT mqtt = new MQTT();
 		try {
 			mqtt.setHost(host, port);

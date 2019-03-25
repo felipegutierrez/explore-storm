@@ -13,6 +13,7 @@ import org.apache.storm.topology.base.BaseRichBolt;
 import org.apache.storm.tuple.Tuple;
 import org.sense.storm.utils.MqttSensors;
 
+import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 
@@ -30,6 +31,7 @@ public class SensorJoinTicketTrainPrinterBolt extends BaseRichBolt {
 
 	private Meter tupleMeter;
 	private Timer tupleTimer;
+	private Histogram tupleHistogram;
 
 	public SensorJoinTicketTrainPrinterBolt(int projectionId) {
 		this.projectionId = projectionId;
@@ -44,6 +46,7 @@ public class SensorJoinTicketTrainPrinterBolt extends BaseRichBolt {
 		this.id = context.getThisTaskId();
 		this.tupleMeter = context.registerMeter("meterJoin-" + this.name);
 		this.tupleTimer = context.registerTimer("timerJoin-" + this.name);
+		this.tupleHistogram = context.registerHistogram("histogramJoin-" + this.name);
 	}
 
 	@Override
