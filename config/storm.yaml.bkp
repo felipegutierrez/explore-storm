@@ -101,17 +101,17 @@ storm.scheduler: "org.sense.storm.scheduler.SiteAwareScheduler"
 #       endpoint: "event-logger.mycompany.org"
 
 # Metrics v2 configuration (optional)
-#storm.metrics.reporters:
-#  # Graphite Reporter
-#  - class: "org.apache.storm.metrics2.reporters.GraphiteStormReporter"
-#    daemons:
-#        - "supervisor"
-#        - "nimbus"
-#        - "worker"
-#    report.period: 60
-#    report.period.units: "SECONDS"
-#    graphite.host: "localhost"
-#    graphite.port: 2003
+storm.metrics.reporters:
+  # Graphite Reporter
+  - class: "org.apache.storm.metrics2.reporters.GraphiteStormReporter"
+    daemons:
+        - "supervisor"
+        - "nimbus"
+        - "worker"
+    report.period: 30
+    report.period.units: "SECONDS"
+    graphite.host: "127.0.0.1"
+    graphite.port: 2003
 #
 #  # Console Reporter
 #  - class: "org.apache.storm.metrics2.reporters.ConsoleStormReporter"
