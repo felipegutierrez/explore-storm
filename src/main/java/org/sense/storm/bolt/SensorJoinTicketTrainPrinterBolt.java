@@ -14,11 +14,11 @@ import org.apache.storm.tuple.Tuple;
 import org.sense.storm.utils.MqttSensors;
 
 import com.codahale.metrics.Meter;
+import com.codahale.metrics.Timer;
 
 public class SensorJoinTicketTrainPrinterBolt extends BaseRichBolt {
 
 	private static final long serialVersionUID = 7146201246991885765L;
-
 	final static Logger logger = Logger.getLogger(SensorJoinTicketTrainPrinterBolt.class);
 
 	private String projection;
@@ -27,7 +27,9 @@ public class SensorJoinTicketTrainPrinterBolt extends BaseRichBolt {
 	private String name;
 	private OutputCollector collector;
 	private List<String> result;
+
 	private Meter tupleMeter;
+	private Timer tupleTimer;
 
 	public SensorJoinTicketTrainPrinterBolt(int projectionId) {
 		this.projectionId = projectionId;
@@ -41,198 +43,204 @@ public class SensorJoinTicketTrainPrinterBolt extends BaseRichBolt {
 		this.name = context.getThisComponentId();
 		this.id = context.getThisTaskId();
 		this.tupleMeter = context.registerMeter("meterJoin-" + this.name);
+		this.tupleTimer = context.registerTimer("timerJoin-" + this.name);
 	}
 
 	@Override
 	public void execute(Tuple input) {
+		final Timer.Context timeContext = this.tupleTimer.time();
 		this.tupleMeter.mark();
 
-		Integer leftSensorId = null;
-		String leftSensorType = null;
-		Integer leftPlatformId = null;
-		String leftPlatformType = null;
-		Integer leftStationId = null;
-		Double leftValue = null;
+		try {
+			Integer leftSensorId = null;
+			String leftSensorType = null;
+			Integer leftPlatformId = null;
+			String leftPlatformType = null;
+			Integer leftStationId = null;
+			Double leftValue = null;
 
-		Integer rightSensorId = null;
-		String rightSensorType = null;
-		Integer rightPlatformId = null;
-		String rightPlatformType = null;
-		Integer rightStationId = null;
-		Double rightValue = null;
+			Integer rightSensorId = null;
+			String rightSensorType = null;
+			Integer rightPlatformId = null;
+			String rightPlatformType = null;
+			Integer rightStationId = null;
+			Double rightValue = null;
 
-		String resultLeft = null;
-		String resultRight = null;
-		String resultProjection = null;
+			String resultLeft = null;
+			String resultRight = null;
+			String resultProjection = null;
 
-		switch (projectionId) {
-		case 1:
-			try {
-				leftSensorId = input.getInteger(0);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting left.sensorId.");
-			}
-			try {
-				leftSensorType = input.getString(1);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting left.sensorType.");
-			}
-			try {
-				leftValue = input.getDouble(2);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting left.value.");
+			switch (projectionId) {
+			case 1:
+				try {
+					leftSensorId = input.getInteger(0);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting left.sensorId.");
+				}
+				try {
+					leftSensorType = input.getString(1);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting left.sensorType.");
+				}
+				try {
+					leftValue = input.getDouble(2);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting left.value.");
+				}
+
+				try {
+					rightSensorId = input.getInteger(3);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting right.sensorId.");
+				}
+				try {
+					rightSensorType = input.getString(4);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting right.sensorType.");
+				}
+				try {
+					rightValue = input.getDouble(5);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting right.value.");
+				}
+
+				try {
+					rightPlatformType = input.getString(6);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting right.platformType.");
+				}
+				try {
+					rightStationId = input.getInteger(7);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting right.stationId.");
+				}
+
+				resultLeft = "left sensorId[" + leftSensorId + "] sensorType[" + leftSensorType + "] value[" + leftValue
+						+ "]";
+				resultRight = "right sensorId[" + rightSensorId + "] sensorType[" + rightSensorType + "] value["
+						+ rightValue + "]";
+				resultProjection = resultLeft + " - " + resultRight + " - platformType[" + rightPlatformType
+						+ "] stationId[" + rightStationId + "]";
+				break;
+			case 2:
+				try {
+					leftSensorType = input.getString(0);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting left.sensorType.");
+				}
+				try {
+					leftPlatformId = input.getInteger(1);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting left.platformId.");
+				}
+				try {
+					leftValue = input.getDouble(2);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting left.value.");
+				}
+
+				try {
+					rightSensorType = input.getString(3);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting right.sensorType.");
+				}
+				try {
+					rightPlatformId = input.getInteger(4);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting right.platformId.");
+				}
+				try {
+					rightValue = input.getDouble(5);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting right.value.");
+				}
+
+				resultLeft = "left sensorType[" + leftSensorType + "] sum[" + leftValue + "]";
+				resultRight = "right sensorType[" + rightSensorType + "] sum[" + rightValue + "]";
+				resultProjection = resultLeft + " - " + resultRight + " - platformId[" + leftPlatformId + "]";
+				break;
+			default:
+				try {
+					leftSensorId = input.getInteger(0);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting left.sensorId.");
+				}
+				try {
+					leftSensorType = input.getString(1);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting left.sensorType.");
+				}
+				try {
+					leftPlatformId = input.getInteger(2);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting left.platformId.");
+				}
+				try {
+					leftPlatformType = input.getString(3);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting left.platformType.");
+				}
+				try {
+					leftStationId = input.getInteger(4);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting left.stationId.");
+				}
+				try {
+					leftValue = input.getDouble(5);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting left.value.");
+				}
+
+				try {
+					rightSensorId = input.getInteger(6);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting right.sensorId.");
+				}
+				try {
+					rightSensorType = input.getString(7);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting right.sensorType.");
+				}
+				try {
+					rightPlatformId = input.getInteger(8);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting right.platformId.");
+				}
+				try {
+					rightPlatformType = input.getString(9);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting right.platformType.");
+				}
+				try {
+					rightStationId = input.getInteger(10);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting right.stationId.");
+				}
+				try {
+					rightValue = input.getDouble(11);
+				} catch (ClassCastException re) {
+					System.err.println("Error converting right.value.");
+				}
+				resultLeft = "left sensorId[" + leftSensorId + "] sensorType[" + leftSensorType + "] platformId["
+						+ leftPlatformId + "] platformType[" + leftPlatformType + "] stationId[" + leftStationId
+						+ "] value[" + leftValue + "]";
+
+				resultRight = "right sensorId[" + rightSensorId + "] sensorType[" + rightSensorType + "] platformId["
+						+ rightPlatformId + "] platformType[" + rightPlatformType + "] stationId[" + rightStationId
+						+ "] value[" + rightValue + "]";
+				resultProjection = resultLeft + " - " + resultRight;
+				break;
 			}
 
-			try {
-				rightSensorId = input.getInteger(3);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting right.sensorId.");
-			}
-			try {
-				rightSensorType = input.getString(4);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting right.sensorType.");
-			}
-			try {
-				rightValue = input.getDouble(5);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting right.value.");
-			}
+			result.add(input.toString());
 
-			try {
-				rightPlatformType = input.getString(6);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting right.platformType.");
-			}
-			try {
-				rightStationId = input.getInteger(7);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting right.stationId.");
-			}
-
-			resultLeft = "left sensorId[" + leftSensorId + "] sensorType[" + leftSensorType + "] value[" + leftValue
-					+ "]";
-			resultRight = "right sensorId[" + rightSensorId + "] sensorType[" + rightSensorType + "] value["
-					+ rightValue + "]";
-			resultProjection = resultLeft + " - " + resultRight + " - platformType[" + rightPlatformType
-					+ "] stationId[" + rightStationId + "]";
-			break;
-		case 2:
-			try {
-				leftSensorType = input.getString(0);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting left.sensorType.");
-			}
-			try {
-				leftPlatformId = input.getInteger(1);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting left.platformId.");
-			}
-			try {
-				leftValue = input.getDouble(2);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting left.value.");
-			}
-
-			try {
-				rightSensorType = input.getString(3);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting right.sensorType.");
-			}
-			try {
-				rightPlatformId = input.getInteger(4);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting right.platformId.");
-			}
-			try {
-				rightValue = input.getDouble(5);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting right.value.");
-			}
-
-			resultLeft = "left sensorType[" + leftSensorType + "] sum[" + leftValue + "]";
-			resultRight = "right sensorType[" + rightSensorType + "] sum[" + rightValue + "]";
-			resultProjection = resultLeft + " - " + resultRight + " - platformId[" + leftPlatformId + "]";
-			break;
-		default:
-			try {
-				leftSensorId = input.getInteger(0);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting left.sensorId.");
-			}
-			try {
-				leftSensorType = input.getString(1);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting left.sensorType.");
-			}
-			try {
-				leftPlatformId = input.getInteger(2);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting left.platformId.");
-			}
-			try {
-				leftPlatformType = input.getString(3);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting left.platformType.");
-			}
-			try {
-				leftStationId = input.getInteger(4);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting left.stationId.");
-			}
-			try {
-				leftValue = input.getDouble(5);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting left.value.");
-			}
-
-			try {
-				rightSensorId = input.getInteger(6);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting right.sensorId.");
-			}
-			try {
-				rightSensorType = input.getString(7);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting right.sensorType.");
-			}
-			try {
-				rightPlatformId = input.getInteger(8);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting right.platformId.");
-			}
-			try {
-				rightPlatformType = input.getString(9);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting right.platformType.");
-			}
-			try {
-				rightStationId = input.getInteger(10);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting right.stationId.");
-			}
-			try {
-				rightValue = input.getDouble(11);
-			} catch (ClassCastException re) {
-				System.err.println("Error converting right.value.");
-			}
-			resultLeft = "left sensorId[" + leftSensorId + "] sensorType[" + leftSensorType + "] platformId["
-					+ leftPlatformId + "] platformType[" + leftPlatformType + "] stationId[" + leftStationId
-					+ "] value[" + leftValue + "]";
-
-			resultRight = "right sensorId[" + rightSensorId + "] sensorType[" + rightSensorType + "] platformId["
-					+ rightPlatformId + "] platformType[" + rightPlatformType + "] stationId[" + rightStationId
-					+ "] value[" + rightValue + "]";
-			resultProjection = resultLeft + " - " + resultRight;
-			break;
+			collector.ack(input);
+			// print here or wait until the application finishes to execute the cleanup()
+			// method
+			logger.info(resultProjection);
+		} finally {
+			timeContext.stop();
 		}
-
-		result.add(input.toString());
-
-		collector.ack(input);
-		// print here or wait until the application finishes to execute the cleanup()
-		// method
-		logger.info(resultProjection);
 	}
 
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {

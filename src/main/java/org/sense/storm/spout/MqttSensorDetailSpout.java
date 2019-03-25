@@ -17,6 +17,7 @@ import org.fusesource.mqtt.client.QoS;
 import org.fusesource.mqtt.client.Topic;
 
 import com.codahale.metrics.Meter;
+import com.codahale.metrics.Timer;
 
 public class MqttSensorDetailSpout extends BaseRichSpout {
 
@@ -41,6 +42,7 @@ public class MqttSensorDetailSpout extends BaseRichSpout {
 	private Fields outFields;
 
 	private Meter tupleMeter;
+	private Timer tupleTimer;
 
 	public MqttSensorDetailSpout(String topic, Fields outFields) {
 		this(DEFAUL_HOST, DEFAUL_PORT, topic, QoS.AT_LEAST_ONCE, outFields);
@@ -66,6 +68,7 @@ public class MqttSensorDetailSpout extends BaseRichSpout {
 		this.context = context;
 		this.collector = collector;
 		this.tupleMeter = context.registerMeter("meterSpout-" + this.topic);
+		this.tupleTimer = context.registerTimer("timerSpout-" + this.topic);
 		MQTT mqtt = new MQTT();
 		try {
 			mqtt.setHost(host, port);
@@ -98,8 +101,9 @@ public class MqttSensorDetailSpout extends BaseRichSpout {
 	}
 
 	public void nextTuple() {
+		final Timer.Context timeContext = this.tupleTimer.time();
+		this.tupleMeter.mark();
 		try {
-			this.tupleMeter.mark();
 			while (blockingConnection.isConnected()) {
 				Message message = blockingConnection.receive();
 				String payload = new String(message.getPayload());
@@ -149,6 +153,8 @@ public class MqttSensorDetailSpout extends BaseRichSpout {
 		} catch (Exception e) {
 			logger.error("Error: ", e.getCause());
 			e.printStackTrace();
+		} finally {
+			timeContext.stop();
 		}
 	}
 
