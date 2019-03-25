@@ -13,6 +13,8 @@ import org.apache.storm.topology.base.BaseRichBolt;
 import org.apache.storm.tuple.Tuple;
 import org.sense.storm.utils.MqttSensors;
 
+import com.codahale.metrics.Meter;
+
 public class SensorJoinTicketTrainPrinterBolt extends BaseRichBolt {
 
 	private static final long serialVersionUID = 7146201246991885765L;
@@ -25,6 +27,7 @@ public class SensorJoinTicketTrainPrinterBolt extends BaseRichBolt {
 	private String name;
 	private OutputCollector collector;
 	private List<String> result;
+	private Meter tupleMeter;
 
 	public SensorJoinTicketTrainPrinterBolt(int projectionId) {
 		this.projectionId = projectionId;
@@ -37,10 +40,13 @@ public class SensorJoinTicketTrainPrinterBolt extends BaseRichBolt {
 		this.result = new ArrayList<String>();
 		this.name = context.getThisComponentId();
 		this.id = context.getThisTaskId();
+		this.tupleMeter = context.registerMeter("meterJoin-" + this.name);
 	}
 
 	@Override
 	public void execute(Tuple input) {
+		this.tupleMeter.mark();
+
 		Integer leftSensorId = null;
 		String leftSensorType = null;
 		Integer leftPlatformId = null;

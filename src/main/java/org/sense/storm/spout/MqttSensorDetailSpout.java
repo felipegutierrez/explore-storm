@@ -16,6 +16,8 @@ import org.fusesource.mqtt.client.Message;
 import org.fusesource.mqtt.client.QoS;
 import org.fusesource.mqtt.client.Topic;
 
+import com.codahale.metrics.Meter;
+
 public class MqttSensorDetailSpout extends BaseRichSpout {
 
 	final static Logger logger = Logger.getLogger(MqttSensorDetailSpout.class);
@@ -37,6 +39,8 @@ public class MqttSensorDetailSpout extends BaseRichSpout {
 	private BlockingConnection blockingConnection;
 
 	private Fields outFields;
+
+	private Meter tupleMeter;
 
 	public MqttSensorDetailSpout(String topic, Fields outFields) {
 		this(DEFAUL_HOST, DEFAUL_PORT, topic, QoS.AT_LEAST_ONCE, outFields);
@@ -61,9 +65,8 @@ public class MqttSensorDetailSpout extends BaseRichSpout {
 	public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
 		this.context = context;
 		this.collector = collector;
-
+		this.tupleMeter = context.registerMeter("meterSpout-" + this.topic);
 		MQTT mqtt = new MQTT();
-
 		try {
 			mqtt.setHost(host, port);
 
@@ -96,6 +99,7 @@ public class MqttSensorDetailSpout extends BaseRichSpout {
 
 	public void nextTuple() {
 		try {
+			this.tupleMeter.mark();
 			while (blockingConnection.isConnected()) {
 				Message message = blockingConnection.receive();
 				String payload = new String(message.getPayload());

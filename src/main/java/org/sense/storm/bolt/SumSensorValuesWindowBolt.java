@@ -15,6 +15,8 @@ import org.apache.storm.windowing.TupleWindow;
 import org.sense.storm.utils.MqttSensors;
 import org.sense.storm.utils.SensorType;
 
+import com.codahale.metrics.Meter;
+
 /**
  * This is a Bolt implementation that sum all values from sensors of the same
  * type.
@@ -29,6 +31,8 @@ public class SumSensorValuesWindowBolt extends BaseWindowedBolt {
 
 	private SensorType sensorType;
 
+	private Meter tupleMeter;
+
 	public SumSensorValuesWindowBolt(SensorType sensorType) {
 		this.sensorType = sensorType;
 	}
@@ -36,10 +40,13 @@ public class SumSensorValuesWindowBolt extends BaseWindowedBolt {
 	@Override
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
 		this.collector = collector;
+		this.tupleMeter = context.registerMeter("meterSum-" + this.sensorType.getValue());
 	}
 
 	@Override
 	public void execute(TupleWindow inputWindow) {
+
+		this.tupleMeter.mark();
 		Map<Integer, Double> sum = new HashMap<Integer, Double>();
 
 		if (this.sensorType == null) {
