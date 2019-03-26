@@ -33,7 +33,7 @@ public class MqttSensorSumTopology {
 		Config config = new Config();
 		config.setDebug(false);
 		// number of Workers on each node. This is for task parallelism.
-		config.setNumWorkers(1);
+		config.setNumWorkers(2);
 
 		// The memory limit a worker process will be allocated in megabytes
 		// config.setTopologyWorkerMaxHeapSize(512.0);
