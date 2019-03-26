@@ -105,14 +105,14 @@ public class MqttSensorDetailSpout extends BaseRichSpout {
 	}
 
 	public void nextTuple() {
-		final Timer.Context timeContext = this.tupleTimer.time();
-		this.tupleMeter.mark();
 		try {
 			while (blockingConnection.isConnected()) {
 				Message message = blockingConnection.receive();
 				String payload = new String(message.getPayload());
 				logger.debug("message[" + topic + "]: " + payload);
 
+				final Timer.Context timeContext = this.tupleTimer.time();
+				this.tupleMeter.mark();
 				message.ack();
 
 				String[] arr = payload.split("\\|");
@@ -159,12 +159,11 @@ public class MqttSensorDetailSpout extends BaseRichSpout {
 					logger.error("Error converting value.", re.getCause());
 				}
 				collector.emit(new Values(sensorId, sensorType, platformId, platformType, stationId, timestamp, value));
+				timeContext.stop();
 			}
 		} catch (Exception e) {
 			logger.error("Error: ", e.getCause());
 			e.printStackTrace();
-		} finally {
-			timeContext.stop();
 		}
 	}
 

@@ -27,8 +27,8 @@ public class MqttSensorJoinTopology {
 		// Create Config instance for cluster configuration
 		Config config = new Config();
 		config.setDebug(false);
-
-		// Profiling Resource Usage: Log all storm metrics
+		// set the number of Workers on each node. This is not parallelism of tasks yet.
+		config.setNumWorkers(1);
 
 		TopologyBuilder builder = new TopologyBuilder();
 

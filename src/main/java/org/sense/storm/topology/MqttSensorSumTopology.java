@@ -32,13 +32,11 @@ public class MqttSensorSumTopology {
 		// Create Config instance for cluster configuration
 		Config config = new Config();
 		config.setDebug(false);
-		// number of Workers on each node. This is for task parallelism.
+		// set the number of Workers on each node. This is not parallelism of tasks yet.
 		config.setNumWorkers(2);
 
 		// The memory limit a worker process will be allocated in megabytes
 		// config.setTopologyWorkerMaxHeapSize(512.0);
-
-		// Profiling Resource Usage: Log all storm metrics
 
 		// Data stream topology
 		TopologyBuilder topologyBuilder = new TopologyBuilder();
@@ -54,19 +52,29 @@ public class MqttSensorSumTopology {
 				MqttSensors.FIELD_VALUE.getValue());
 
 		// Spouts: data stream from count ticket and count train sensors
-		topologyBuilder.setSpout(MqttSensors.SPOUT_STATION_01_TICKETS.getValue(), new MqttSensorDetailSpout(ipAddressSource01, MqttSensors.TOPIC_STATION_01_TICKETS.getValue(), fields))
+		// Spouts configured to run 2 EXECUTORS in parallel but only 1 TASK.
+		topologyBuilder.setSpout(MqttSensors.SPOUT_STATION_01_TICKETS.getValue(), 
+				new MqttSensorDetailSpout(ipAddressSource01, MqttSensors.TOPIC_STATION_01_TICKETS.getValue(), fields), 2)
+				.setNumTasks(1)
 				.addConfiguration(TagSite.SITE.getValue(), TagSite.EDGE.getValue())
 				;
-		topologyBuilder.setSpout(MqttSensors.SPOUT_STATION_01_TRAINS.getValue(), new MqttSensorDetailSpout(ipAddressSource01, MqttSensors.TOPIC_STATION_01_TRAINS.getValue(), fields))
+		topologyBuilder.setSpout(MqttSensors.SPOUT_STATION_01_TRAINS.getValue(), 
+				new MqttSensorDetailSpout(ipAddressSource01, MqttSensors.TOPIC_STATION_01_TRAINS.getValue(), fields), 2)
+				.setNumTasks(1)
 				.addConfiguration(TagSite.SITE.getValue(), TagSite.EDGE.getValue())
 				;
 
 		// Bolts to compute the sum of TICKETS and TRAINS
-		topologyBuilder.setBolt(MqttSensors.BOLT_SENSOR_TICKET_SUM.getValue(), new SumSensorValuesWindowBolt(SensorType.COUNTER_TICKETS).withTumblingWindow(Duration.seconds(5)), 1)
+		// Bolts configured to run 2 EXECUTORS in parallel and 2 TASKS each. There will be 4 TASKS instances in total.
+		topologyBuilder.setBolt(MqttSensors.BOLT_SENSOR_TICKET_SUM.getValue(), 
+				new SumSensorValuesWindowBolt(SensorType.COUNTER_TICKETS).withTumblingWindow(Duration.seconds(5)), 2)
+				.setNumTasks(2)
 				.shuffleGrouping(MqttSensors.SPOUT_STATION_01_TICKETS.getValue())
 				.addConfiguration(TagSite.SITE.getValue(), TagSite.EDGE.getValue())
 				;
-		topologyBuilder.setBolt(MqttSensors.BOLT_SENSOR_TRAIN_SUM.getValue(), new SumSensorValuesWindowBolt(SensorType.COUNTER_TRAINS).withTumblingWindow(Duration.seconds(5)), 1)
+		topologyBuilder.setBolt(MqttSensors.BOLT_SENSOR_TRAIN_SUM.getValue(), 
+				new SumSensorValuesWindowBolt(SensorType.COUNTER_TRAINS).withTumblingWindow(Duration.seconds(5)), 2)
+				.setNumTasks(2)
 				.shuffleGrouping(MqttSensors.SPOUT_STATION_01_TRAINS.getValue())
 				.addConfiguration(TagSite.SITE.getValue(), TagSite.EDGE.getValue())
 				;
@@ -78,14 +86,16 @@ public class MqttSensorSumTopology {
 		 		.join(MqttSensors.BOLT_SENSOR_TRAIN_SUM.getValue(), MqttSensors.FIELD_PLATFORM_ID.getValue(), MqttSensors.BOLT_SENSOR_TICKET_SUM.getValue())
 		 		.select(projection.getProjection())
 		 		.withTumblingWindow(new BaseWindowedBolt.Duration(5, TimeUnit.SECONDS));
-		topologyBuilder.setBolt(BOLT_SENSOR_JOINER, joiner)
+		topologyBuilder.setBolt(BOLT_SENSOR_JOINER, joiner, 2)
+				.setNumTasks(2)
 				.fieldsGrouping(MqttSensors.BOLT_SENSOR_TICKET_SUM.getValue(), new Fields(MqttSensors.FIELD_PLATFORM_ID.getValue()))
 				.fieldsGrouping(MqttSensors.BOLT_SENSOR_TRAIN_SUM.getValue(), new Fields(MqttSensors.FIELD_PLATFORM_ID.getValue()))
 				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
 				;
 
 		// Printer Bolt
-		topologyBuilder.setBolt(BOLT_SENSOR_PRINT, new SensorPrinterBolt(projectionId))
+		topologyBuilder.setBolt(BOLT_SENSOR_PRINT, new SensorPrinterBolt(projectionId), 2)
+				.setNumTasks(2)
 				.shuffleGrouping(BOLT_SENSOR_JOINER)
 				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
 				;
