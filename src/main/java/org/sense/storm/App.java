@@ -9,7 +9,7 @@ import org.sense.storm.topology.MqttSensorTopology;
 
 public class App {
 
-	final static Logger logger = Logger.getLogger(App.class);
+	private static final Logger logger = Logger.getLogger(App.class);
 
 	public static void main(String[] args) throws Exception {
 		try {
@@ -44,7 +44,8 @@ public class App {
 							ipAddressSource01 = args[2];
 							if (!validIP(ipAddressSource01)) {
 								ipAddressSource01 = "127.0.0.1";
-								System.err.println("IP address invalid. Using the default IP address: " + ipAddressSource01);
+								System.err.println(
+										"IP address invalid. Using the default IP address: " + ipAddressSource01);
 							} else {
 								System.out.println("Valid IP address: " + ipAddressSource01);
 							}

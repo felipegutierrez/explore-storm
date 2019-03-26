@@ -7,7 +7,13 @@ public enum MqttSensors {
 	TOPIC_STATION_02_TRAINS("topic-station-02-trains"), TOPIC_STATION_02_TICKETS("topic-station-02-tickets"),
 
 	FIELD_SENSOR_ID("sensorId"), FIELD_SENSOR_TYPE("sensorType"), FIELD_PLATFORM_ID("platformId"),
-	FIELD_PLATFORM_TYPE("platformType"), FIELD_STATION_ID("stationId"), FIELD_VALUE("value"),
+	FIELD_PLATFORM_TYPE("platformType"), FIELD_STATION_ID("stationId"), FIELD_TIMESTAMP("timestamp"),
+	FIELD_VALUE("value"),
+
+	FIELD_SENSOR_ID_SECOND("secondSensorId"), FIELD_SENSOR_TYPE_SECOND("secondSensorType"),
+	FIELD_PLATFORM_ID_SECOND("secondPlatformId"), FIELD_PLATFORM_TYPE_SECOND("secondPlatformType"),
+	FIELD_STATION_ID_SECOND("secondStationId"), FIELD_TIMESTAMP_SECOND("secondTimestamp"),
+	FIELD_VALUE_SECOND("secondValue"),
 
 	SPOUT_STATION_01_PEOPLE("spout-station-01-people"), SPOUT_STATION_01_TRAINS("spout-station-01-trains"),
 	SPOUT_STATION_01_TICKETS("spout-station-01-tickets"), SPOUT_STATION_02_PEOPLE("spout-station-02-people"),
@@ -15,7 +21,7 @@ public enum MqttSensors {
 
 	BOLT_SENSOR_TICKET_SUM("bolt-sensor-ticket-sum"), BOLT_SENSOR_TRAIN_SUM("bolt-sensor-train-sum"),
 
-	FIELD_SUM("sum"), FIELD_AVERAGE("average");
+	FIELD_SUM("sum"), FIELD_SUM_SECOND("secondSum"), FIELD_AVERAGE("average");
 
 	private String value;
 

@@ -121,6 +121,7 @@ public class MqttSensorDetailSpout extends BaseRichSpout {
 				Integer platformId = 0;
 				String platformType = "";
 				Integer stationId = 0;
+				Long timestamp = 0L;
 				Double value = 0.0;
 				try {
 					sensorId = Integer.parseInt(arr[0]);
@@ -148,11 +149,16 @@ public class MqttSensorDetailSpout extends BaseRichSpout {
 					logger.error("Error converting stationId.", re.getCause());
 				}
 				try {
-					value = Double.parseDouble(arr[5]);
+					timestamp = Long.parseLong(arr[5]);
+				} catch (ClassCastException re) {
+					logger.error("Error converting timestamp.", re.getCause());
+				}
+				try {
+					value = Double.parseDouble(arr[6]);
 				} catch (ClassCastException re) {
 					logger.error("Error converting value.", re.getCause());
 				}
-				collector.emit(new Values(sensorId, sensorType, platformId, platformType, stationId, value));
+				collector.emit(new Values(sensorId, sensorType, platformId, platformType, stationId, timestamp, value));
 			}
 		} catch (Exception e) {
 			logger.error("Error: ", e.getCause());

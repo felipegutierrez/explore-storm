@@ -12,7 +12,7 @@ import org.sense.storm.spout.MqttSensorSpout;
 
 public class MqttSensorTopology {
 
-	final static Logger logger = Logger.getLogger(MqttSensorTopology.class);
+	private static final Logger logger = Logger.getLogger(MqttSensorTopology.class);
 
 	private static final String SPOUT_STATION_01 = "spout-station-01";
 	private static final String SPOUT_STATION_02 = "spout-station-02";
@@ -29,19 +29,15 @@ public class MqttSensorTopology {
 
 		// @formatter:off
 		// Spouts
-		builder.setSpout(SPOUT_STATION_01, new MqttSensorSpout("topic-station-01"))
-				.addConfiguration("tags", "GPU");
-		builder.setSpout(SPOUT_STATION_02, new MqttSensorSpout("topic-station-02"))
-				.addConfiguration("tags", "GPU");
+		builder.setSpout(SPOUT_STATION_01, new MqttSensorSpout("topic-station-01"));
+		builder.setSpout(SPOUT_STATION_02, new MqttSensorSpout("topic-station-02"));
 
 		// Bolts
 		builder.setBolt(BOLT_CREATE_SENSOR, new SensorMapperBolt())
 				.shuffleGrouping(SPOUT_STATION_01)
-				.shuffleGrouping(SPOUT_STATION_02)
-				.addConfiguration("tags", "GPU");
-		builder.setBolt(BOLT_SENSOR_PRINT, new SensorPrinterBolt())
-				.fieldsGrouping(BOLT_CREATE_SENSOR, new Fields("value"))
-				.addConfiguration("tags", "GPU");
+				.shuffleGrouping(SPOUT_STATION_02);
+		builder.setBolt(BOLT_SENSOR_PRINT, new SensorPrinterBolt(0))
+				.fieldsGrouping(BOLT_CREATE_SENSOR, new Fields("value"));
 		// @formatter:on
 
 		if (env != null && env.equalsIgnoreCase("CLUSTER")) {

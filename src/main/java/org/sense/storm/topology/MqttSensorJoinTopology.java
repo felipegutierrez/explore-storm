@@ -10,7 +10,8 @@ import org.apache.storm.bolt.JoinBolt;
 import org.apache.storm.topology.TopologyBuilder;
 import org.apache.storm.topology.base.BaseWindowedBolt;
 import org.apache.storm.tuple.Fields;
-import org.sense.storm.bolt.SensorJoinTicketTrainPrinterBolt;
+import org.sense.storm.bolt.SensorJoinTicketTrainBolt;
+import org.sense.storm.bolt.SensorPrinterBolt;
 import org.sense.storm.spout.MqttSensorDetailSpout;
 import org.sense.storm.utils.MqttSensors;
 
@@ -37,7 +38,8 @@ public class MqttSensorJoinTopology {
 				MqttSensors.FIELD_SENSOR_TYPE.getValue(), 
 				MqttSensors.FIELD_PLATFORM_ID.getValue(), 
 				MqttSensors.FIELD_PLATFORM_TYPE.getValue(),
-				MqttSensors.FIELD_STATION_ID.getValue(), 
+				MqttSensors.FIELD_STATION_ID.getValue(),
+				MqttSensors.FIELD_TIMESTAMP.getValue(),
 				MqttSensors.FIELD_VALUE.getValue());
 
 		// Spouts: data stream from count ticket and count train sensors
@@ -45,7 +47,8 @@ public class MqttSensorJoinTopology {
 		builder.setSpout(MqttSensors.SPOUT_STATION_01_TRAINS.getValue(), new MqttSensorDetailSpout(ipAddressSource01, MqttSensors.TOPIC_STATION_01_TRAINS.getValue(), fields));
 
 		// Joiner Bolt
-		SensorJoinTicketTrainPrinterBolt projection = new SensorJoinTicketTrainPrinterBolt(1);
+		int projectionId = 1;
+		SensorJoinTicketTrainBolt projection = new SensorJoinTicketTrainBolt(projectionId);
 		JoinBolt joiner = new JoinBolt(MqttSensors.SPOUT_STATION_01_TICKETS.getValue(), MqttSensors.FIELD_PLATFORM_ID.getValue())
 				.join(MqttSensors.SPOUT_STATION_01_TRAINS.getValue(), MqttSensors.FIELD_PLATFORM_ID.getValue(), MqttSensors.SPOUT_STATION_01_TICKETS.getValue())
 				.select(projection.getProjection())
@@ -55,7 +58,8 @@ public class MqttSensorJoinTopology {
 				.fieldsGrouping(MqttSensors.SPOUT_STATION_01_TRAINS.getValue(), new Fields(MqttSensors.FIELD_PLATFORM_ID.getValue()));
 
 		// Printer Bolt
-		builder.setBolt(BOLT_SENSOR_PRINT, projection).shuffleGrouping(BOLT_SENSOR_JOINER);
+		builder.setBolt(BOLT_SENSOR_PRINT, new SensorPrinterBolt(projectionId))
+				.shuffleGrouping(BOLT_SENSOR_JOINER);
 		// @formatter:off
 
 		if (msg != null && msg.equalsIgnoreCase("CLUSTER")) {

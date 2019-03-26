@@ -13,6 +13,7 @@ import org.apache.storm.tuple.Tuple;
 import org.apache.storm.tuple.Values;
 import org.apache.storm.windowing.TupleWindow;
 import org.sense.storm.utils.MqttSensors;
+import org.sense.storm.utils.Pair;
 import org.sense.storm.utils.SensorType;
 
 import com.codahale.metrics.Histogram;
@@ -26,7 +27,7 @@ import com.codahale.metrics.Timer;
 public class SumSensorValuesWindowBolt extends BaseWindowedBolt {
 
 	private static final long serialVersionUID = 6005737461658868444L;
-	final static Logger logger = Logger.getLogger(SumSensorValuesWindowBolt.class);
+	private static final Logger logger = Logger.getLogger(SumSensorValuesWindowBolt.class);
 
 	private OutputCollector collector;
 	private SensorType sensorType;
@@ -51,7 +52,8 @@ public class SumSensorValuesWindowBolt extends BaseWindowedBolt {
 
 		final Timer.Context timeContext = this.tupleTimer.time();
 		this.tupleMeter.mark();
-		Map<Integer, Double> sum = new HashMap<Integer, Double>();
+		// Map<Integer, Double> sum = new HashMap<Integer, Double>();
+		Map<Integer, Pair<Long, Double>> sum = new HashMap<Integer, Pair<Long, Double>>();
 
 		try {
 			if (this.sensorType == null) {
@@ -64,6 +66,7 @@ public class SumSensorValuesWindowBolt extends BaseWindowedBolt {
 				Integer platformId = null;
 				String platformType = null;
 				Integer stationId = null;
+				Long timestamp = null;
 				Double value = null;
 
 				try {
@@ -79,22 +82,28 @@ public class SumSensorValuesWindowBolt extends BaseWindowedBolt {
 						logger.error("Error converting platformId.", re.getCause());
 					}
 					try {
-						value = tuple.getDouble(5);
+						timestamp = tuple.getLong(5);
+					} catch (ClassCastException re) {
+						logger.error("Error converting timestamp.", re.getCause());
+					}
+					try {
+						value = tuple.getDouble(6);
 					} catch (ClassCastException re) {
 						logger.error("Error converting value.", re.getCause());
 					}
 
 					if (sum.containsKey(platformId)) {
-						Double total = sum.get(platformId) + value;
-						sum.put(platformId, total);
+						Double total = sum.get(platformId).getSecond() + value;
+						sum.put(platformId, new Pair<Long, Double>(timestamp, total));
 					} else {
-						sum.put(platformId, value);
+						sum.put(platformId, new Pair<Long, Double>(timestamp, value));
 					}
 				}
 			}
-			for (Map.Entry<Integer, Double> entry : sum.entrySet()) {
-				// outputs: sensorType, platformId, sum
-				collector.emit(new Values(this.sensorType.getValue(), entry.getKey(), entry.getValue()));
+			for (Map.Entry<Integer, Pair<Long, Double>> entry : sum.entrySet()) {
+				// outputs: sensorType, platformId, timestamp, sum
+				collector.emit(new Values(this.sensorType.getValue(), entry.getKey(), entry.getValue().getFirst(),
+						entry.getValue().getSecond()));
 			}
 		} finally {
 			timeContext.stop();
@@ -104,6 +113,6 @@ public class SumSensorValuesWindowBolt extends BaseWindowedBolt {
 	@Override
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
 		declarer.declare(new Fields(MqttSensors.FIELD_SENSOR_TYPE.getValue(), MqttSensors.FIELD_PLATFORM_ID.getValue(),
-				MqttSensors.FIELD_SUM.getValue()));
+				MqttSensors.FIELD_TIMESTAMP.getValue(), MqttSensors.FIELD_SUM.getValue()));
 	}
 }

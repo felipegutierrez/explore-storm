@@ -11,7 +11,8 @@ import org.apache.storm.topology.TopologyBuilder;
 import org.apache.storm.topology.base.BaseWindowedBolt;
 import org.apache.storm.topology.base.BaseWindowedBolt.Duration;
 import org.apache.storm.tuple.Fields;
-import org.sense.storm.bolt.SensorJoinTicketTrainPrinterBolt;
+import org.sense.storm.bolt.SensorJoinTicketTrainBolt;
+import org.sense.storm.bolt.SensorPrinterBolt;
 import org.sense.storm.bolt.SumSensorValuesWindowBolt;
 import org.sense.storm.spout.MqttSensorDetailSpout;
 import org.sense.storm.utils.MqttSensors;
@@ -20,8 +21,7 @@ import org.sense.storm.utils.TagSite;
 
 public class MqttSensorSumTopology {
 
-	final static Logger logger = Logger.getLogger(MqttSensorSumTopology.class);
-
+	private static final Logger logger = Logger.getLogger(MqttSensorSumTopology.class);
 	private static final String BOLT_SENSOR_JOINER = "bolt-sensor-joiner";
 	private static final String BOLT_SENSOR_PRINT = "bolt-sensor-print";
 
@@ -50,6 +50,7 @@ public class MqttSensorSumTopology {
 				MqttSensors.FIELD_PLATFORM_ID.getValue(), 
 				MqttSensors.FIELD_PLATFORM_TYPE.getValue(),
 				MqttSensors.FIELD_STATION_ID.getValue(), 
+				MqttSensors.FIELD_TIMESTAMP.getValue(), 
 				MqttSensors.FIELD_VALUE.getValue());
 
 		// Spouts: data stream from count ticket and count train sensors
@@ -71,7 +72,8 @@ public class MqttSensorSumTopology {
 				;
 
 		// Joiner Bolt
-		SensorJoinTicketTrainPrinterBolt projection = new SensorJoinTicketTrainPrinterBolt(2);
+		int projectionId = 2;
+		SensorJoinTicketTrainBolt projection = new SensorJoinTicketTrainBolt(projectionId);
 		JoinBolt joiner = new JoinBolt(MqttSensors.BOLT_SENSOR_TICKET_SUM.getValue(), MqttSensors.FIELD_PLATFORM_ID.getValue())
 		 		.join(MqttSensors.BOLT_SENSOR_TRAIN_SUM.getValue(), MqttSensors.FIELD_PLATFORM_ID.getValue(), MqttSensors.BOLT_SENSOR_TICKET_SUM.getValue())
 		 		.select(projection.getProjection())
@@ -83,7 +85,8 @@ public class MqttSensorSumTopology {
 				;
 
 		// Printer Bolt
-		topologyBuilder.setBolt(BOLT_SENSOR_PRINT, projection).shuffleGrouping(BOLT_SENSOR_JOINER)
+		topologyBuilder.setBolt(BOLT_SENSOR_PRINT, new SensorPrinterBolt(projectionId))
+				.shuffleGrouping(BOLT_SENSOR_JOINER)
 				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
 				;
 		// @formatter:on
