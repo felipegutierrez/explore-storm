@@ -100,20 +100,21 @@ public class SensorAggregateValuesWindowBolt extends BaseWindowedBolt {
 				// generate a key based on Station-platform-sensorType in order to aggregate
 				// values of sensor with same type, on the same platform and same train station
 				String compositeKey = "station-" + stationId + "-platform-" + platformId + "-sensor-" + sensorType;
+				Sensor sensor = null;
 
 				if (aggregatedValues.containsKey(compositeKey)) {
 					Pair<Sensor, Long> currentSensor = aggregatedValues.get(compositeKey);
 					Double totalValue = currentSensor.getFirst().getValue() + value;
 					Long totalCount = currentSensor.getSecond() + 1;
 
-					Sensor sensor = new Sensor(sensorId, sensorType, platformId, platformType, stationId, timestamp,
+					sensor = new Sensor(sensorId, sensorType, platformId, platformType, stationId, timestamp,
 							totalValue);
 					aggregatedValues.put(compositeKey, new Pair<Sensor, Long>(sensor, totalCount));
 				} else {
-					Sensor sensor = new Sensor(sensorId, sensorType, platformId, platformType, stationId, timestamp,
-							value);
+					sensor = new Sensor(sensorId, sensorType, platformId, platformType, stationId, timestamp, value);
 					aggregatedValues.put(compositeKey, new Pair<Sensor, Long>(sensor, 1L));
 				}
+				logger.info("Processing key[" + compositeKey + "] value[" + sensor + "]");
 			}
 			for (Map.Entry<String, Pair<Sensor, Long>> entry : aggregatedValues.entrySet()) {
 

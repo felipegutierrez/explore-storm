@@ -56,7 +56,7 @@ public class MqttSensorExpensiveShuffleTopology {
 		topologyBuilder.setBolt(MqttSensors.BOLT_SENSOR_TYPE.getValue(), new SensorAggregateValuesWindowBolt().withTumblingWindow(Duration.seconds(5)), 2)
 				.fieldsGrouping(MqttSensors.SPOUT_STATION_01.getValue(), new Fields(MqttSensors.FIELD_SENSOR_TYPE.getValue()))
 				.fieldsGrouping(MqttSensors.SPOUT_STATION_02.getValue(), new Fields(MqttSensors.FIELD_SENSOR_TYPE.getValue()))
-				.setNumTasks(4)
+				.setNumTasks(4) // This will create 4 Bolt instances 
 				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
 				;
 
