@@ -11,14 +11,19 @@ import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 import org.apache.storm.tuple.Values;
 
-public class SensorMapperBolt extends BaseRichBolt {
+public class SensorTypeKeyMapperBolt extends BaseRichBolt {
 
-	private final static Logger logger = Logger.getLogger(SensorMapperBolt.class);
-	private final static long serialVersionUID = -6408993991316811358L;
+	private static final long serialVersionUID = 5454803133389789227L;
+	private static final Logger logger = Logger.getLogger(SensorTypeKeyMapperBolt.class);
 
 	// Create instance for OutputCollector which collects and emits tuples to
 	// produce output
 	private OutputCollector collector;
+	private Fields outFields;
+
+	public SensorTypeKeyMapperBolt(Fields outFields) {
+		this.outFields = outFields;
+	}
 
 	public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
 		this.collector = collector;
@@ -34,6 +39,7 @@ public class SensorMapperBolt extends BaseRichBolt {
 		Integer platformId = 0;
 		String platformType = "";
 		Integer stationId = 0;
+		Long timestamp = 0L;
 		Double value = 0.0;
 		try {
 			sensorId = Integer.parseInt(arr[0]);
@@ -71,18 +77,25 @@ public class SensorMapperBolt extends BaseRichBolt {
 			}
 		}
 		try {
-			value = Double.parseDouble(arr[5]);
+			timestamp = Long.parseLong(arr[5]);
 		} catch (NumberFormatException re) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Error converting arr5.");
 			}
 		}
+		try {
+			value = Double.parseDouble(arr[6]);
+		} catch (NumberFormatException re) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("Error converting arr6.");
+			}
+		}
 
-		collector.emit(new Values(sensorId, sensorType, platformId, platformType, stationId, value));
+		collector.emit(new Values(sensorId, sensorType, platformId, platformType, stationId, timestamp, value));
 	}
 
 	public void declareOutputFields(OutputFieldsDeclarer declarer) {
-		declarer.declare(new Fields("sensor-id", "sensor-type", "platform-id", "platform-type", "station-id", "value"));
+		declarer.declare(outFields);
 	}
 
 	@Override

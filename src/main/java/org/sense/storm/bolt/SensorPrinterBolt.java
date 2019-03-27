@@ -13,6 +13,7 @@ import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.base.BaseRichBolt;
 import org.apache.storm.tuple.Tuple;
+import org.sense.storm.utils.Sensor;
 
 public class SensorPrinterBolt extends BaseRichBolt {
 
@@ -54,6 +55,9 @@ public class SensorPrinterBolt extends BaseRichBolt {
 		Integer secondStationId = null;
 		Long secondTimestamp = null;
 		Double secondValue = null;
+
+		Sensor sensor = null;
+		Long total = null;
 
 		String resultToPrint = "";
 
@@ -205,6 +209,24 @@ public class SensorPrinterBolt extends BaseRichBolt {
 					+ sdf.format(new Date(timestamp)) + "] value[" + value + "] " + "\nSecond   -> sensorType["
 					+ secondSensorType + "] platformId[" + secondPlatformId + "] timestamp["
 					+ sdf.format(new Date(secondTimestamp)) + "] value[" + secondValue + "]";
+			break;
+		case 3:
+			try {
+				sensorType = input.getString(0);
+			} catch (ClassCastException re) {
+				System.err.println("Error converting sensorType.");
+			}
+			try {
+				sensor = (Sensor) input.getValue(1);
+			} catch (NumberFormatException re) {
+				System.err.println("Error converting Sensor.");
+			}
+			try {
+				total = input.getLong(2);
+			} catch (NumberFormatException re) {
+				System.err.println("Error converting total.");
+			}
+			resultToPrint = "key[" + sensorType + "] sensor[" + sensor + "] total[" + total + "]";
 			break;
 		default:
 			try {

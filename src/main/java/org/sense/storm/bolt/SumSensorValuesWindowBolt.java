@@ -52,7 +52,6 @@ public class SumSensorValuesWindowBolt extends BaseWindowedBolt {
 
 		final Timer.Context timeContext = this.tupleTimer.time();
 		this.tupleMeter.mark();
-		// Map<Integer, Double> sum = new HashMap<Integer, Double>();
 		Map<Integer, Pair<Long, Double>> sum = new HashMap<Integer, Pair<Long, Double>>();
 
 		try {

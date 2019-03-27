@@ -2,24 +2,27 @@ package org.sense.storm.utils;
 
 public enum MqttSensors {
 
-	TOPIC_STATION_01_PEOPLE("topic-station-01-people"), TOPIC_STATION_01_TRAINS("topic-station-01-trains"),
-	TOPIC_STATION_01_TICKETS("topic-station-01-tickets"), TOPIC_STATION_02_PEOPLE("topic-station-02-people"),
+	TOPIC_STATION_01("topic-station-01"), TOPIC_STATION_01_PEOPLE("topic-station-01-people"),
+	TOPIC_STATION_01_TRAINS("topic-station-01-trains"), TOPIC_STATION_01_TICKETS("topic-station-01-tickets"),
+	TOPIC_STATION_02("topic-station-02"), TOPIC_STATION_02_PEOPLE("topic-station-02-people"),
 	TOPIC_STATION_02_TRAINS("topic-station-02-trains"), TOPIC_STATION_02_TICKETS("topic-station-02-tickets"),
 
-	FIELD_SENSOR_ID("sensorId"), FIELD_SENSOR_TYPE("sensorType"), FIELD_PLATFORM_ID("platformId"),
-	FIELD_PLATFORM_TYPE("platformType"), FIELD_STATION_ID("stationId"), FIELD_TIMESTAMP("timestamp"),
-	FIELD_VALUE("value"),
+	FIELD_SENSOR("sensor"), FIELD_SENSOR_ID("sensorId"), FIELD_SENSOR_TYPE("sensorType"),
+	FIELD_PLATFORM_ID("platformId"), FIELD_PLATFORM_TYPE("platformType"), FIELD_STATION_ID("stationId"),
+	FIELD_TIMESTAMP("timestamp"), FIELD_VALUE("value"), FIELD_COUNT("count"),
 
 	FIELD_SENSOR_ID_SECOND("secondSensorId"), FIELD_SENSOR_TYPE_SECOND("secondSensorType"),
 	FIELD_PLATFORM_ID_SECOND("secondPlatformId"), FIELD_PLATFORM_TYPE_SECOND("secondPlatformType"),
 	FIELD_STATION_ID_SECOND("secondStationId"), FIELD_TIMESTAMP_SECOND("secondTimestamp"),
 	FIELD_VALUE_SECOND("secondValue"),
 
-	SPOUT_STATION_01_PEOPLE("spout-station-01-people"), SPOUT_STATION_01_TRAINS("spout-station-01-trains"),
-	SPOUT_STATION_01_TICKETS("spout-station-01-tickets"), SPOUT_STATION_02_PEOPLE("spout-station-02-people"),
+	SPOUT_STATION_01("spout-station-01"), SPOUT_STATION_01_PEOPLE("spout-station-01-people"),
+	SPOUT_STATION_01_TRAINS("spout-station-01-trains"), SPOUT_STATION_01_TICKETS("spout-station-01-tickets"),
+	SPOUT_STATION_02("spout-station-02"), SPOUT_STATION_02_PEOPLE("spout-station-02-people"),
 	SPOUT_STATION_02_TRAINS("spout-station-02-trains"), SPOUT_STATION_02_TICKETS("spout-station-02-tickets"),
 
 	BOLT_SENSOR_TICKET_SUM("bolt-sensor-ticket-sum"), BOLT_SENSOR_TRAIN_SUM("bolt-sensor-train-sum"),
+	BOLT_SENSOR_TYPE("bolt-sensor-type"),
 
 	FIELD_SUM("sum"), FIELD_SUM_SECOND("secondSum"), FIELD_AVERAGE("average");
 

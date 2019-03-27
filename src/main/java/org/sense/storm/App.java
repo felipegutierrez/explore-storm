@@ -3,6 +3,7 @@ package org.sense.storm;
 import java.util.Scanner;
 
 import org.apache.log4j.Logger;
+import org.sense.storm.topology.MqttSensorExpensiveShuffleTopology;
 import org.sense.storm.topology.MqttSensorJoinTopology;
 import org.sense.storm.topology.MqttSensorSumTopology;
 import org.sense.storm.topology.MqttSensorTopology;
@@ -20,6 +21,7 @@ public class App {
 				System.out.println("1  - reading from train station sensors ");
 				System.out.println("2  - reading multiple data stream sensors from train station topics and performing a JOIN operation");
 				System.out.println("3  - reading multiple data stream sensors from train station topics and performing an AGGREGATE operation");
+				System.out.println("4  - Benchmarking the shuffle phase with SiteAwareScheduler");
 				// @formatter:on
 
 				String appId = "0";
@@ -71,6 +73,10 @@ public class App {
 					break;
 				case 3:
 					new MqttSensorSumTopology(env, ipAddressSource01);
+					app = 0;
+					break;
+				case 4:
+					new MqttSensorExpensiveShuffleTopology(env, ipAddressSource01);
 					app = 0;
 					break;
 				default:
