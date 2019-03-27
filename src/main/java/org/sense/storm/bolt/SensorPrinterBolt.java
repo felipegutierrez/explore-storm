@@ -44,9 +44,9 @@ public class SensorPrinterBolt extends BaseRichBolt {
 		this.result = new ArrayList<String>();
 		this.name = context.getThisComponentId();
 		this.id = context.getThisTaskId();
-		this.tupleMeter = context.registerMeter("print");
-		this.tupleTimer = context.registerTimer("print");
-		this.tupleHistogram = context.registerHistogram("print");
+		this.tupleMeter = context.registerMeter("printMeter");
+		this.tupleTimer = context.registerTimer("printTimer");
+		this.tupleHistogram = context.registerHistogram("printHistogram");
 	}
 
 	public void execute(Tuple input) {
