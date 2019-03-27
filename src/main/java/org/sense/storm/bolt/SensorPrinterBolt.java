@@ -3,7 +3,6 @@ package org.sense.storm.bolt;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -300,19 +299,7 @@ public class SensorPrinterBolt extends BaseRichBolt {
 		// declarer.declare(new Fields("value"));
 	}
 
-	/**
-	 * This method may be called when the Bolt shuts down. However there is no
-	 * guarantee that the method will be called and it will only be called if Storm
-	 * is run using debug mode in a local cluster. We only use it here to print the
-	 * results of the word count when we have finished streaming our file and will
-	 * remove it later.
-	 */
 	@Override
 	public void cleanup() {
-		logger.info("-- Word Counter [" + name + "-" + id + "] --");
-		for (Iterator<String> iterator = result.iterator(); iterator.hasNext();) {
-			String string = (String) iterator.next();
-			logger.info(string);
-		}
 	}
 }

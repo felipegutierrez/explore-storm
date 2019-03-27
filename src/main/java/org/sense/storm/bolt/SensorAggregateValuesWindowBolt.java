@@ -114,7 +114,7 @@ public class SensorAggregateValuesWindowBolt extends BaseWindowedBolt {
 					sensor = new Sensor(sensorId, sensorType, platformId, platformType, stationId, timestamp, value);
 					aggregatedValues.put(compositeKey, new Pair<Sensor, Long>(sensor, 1L));
 				}
-				logger.info("Processing key[" + compositeKey + "] value[" + sensor + "]");
+				System.out.println("Processing key[" + compositeKey + "] value[" + sensor + "]");
 			}
 			for (Map.Entry<String, Pair<Sensor, Long>> entry : aggregatedValues.entrySet()) {
 
@@ -138,7 +138,7 @@ public class SensorAggregateValuesWindowBolt extends BaseWindowedBolt {
 							Calendar.getInstance().getTimeInMillis(), average);
 					collector.emit(new Values(compositeKey, sensor, totalCount));
 				} else {
-					System.err.println("Sensor not registered to compute aggregation.");
+					logger.error("Sensor not registered to compute aggregation.");
 				}
 			}
 		} finally {
