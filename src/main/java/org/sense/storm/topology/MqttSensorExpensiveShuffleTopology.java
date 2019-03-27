@@ -44,11 +44,11 @@ public class MqttSensorExpensiveShuffleTopology {
 		// Spouts configured to run 1 EXECUTOR and 1 TASK for each EXECUTOR.
 		topologyBuilder.setSpout(MqttSensors.SPOUT_STATION_01.getValue(), 
 				new MqttSensorDetailSpout(ipAddressSource01, MqttSensors.TOPIC_STATION_01.getValue(), fields), 1)
-				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
+				.addConfiguration(TagSite.SITE.getValue(), TagSite.EDGE.getValue())
 				;
 		topologyBuilder.setSpout(MqttSensors.SPOUT_STATION_02.getValue(), 
 				new MqttSensorDetailSpout(ipAddressSource01, MqttSensors.TOPIC_STATION_02.getValue(), fields), 1)
-				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
+				.addConfiguration(TagSite.SITE.getValue(), TagSite.EDGE.getValue())
 				;
 
 		// Bolts to partition tuples by key. The key is the sensor type.
