@@ -57,7 +57,7 @@ public class MqttSensorExpensiveShuffleTopology {
 				.fieldsGrouping(MqttSensors.SPOUT_STATION_01.getValue(), new Fields(MqttSensors.FIELD_SENSOR_TYPE.getValue()))
 				.fieldsGrouping(MqttSensors.SPOUT_STATION_02.getValue(), new Fields(MqttSensors.FIELD_SENSOR_TYPE.getValue()))
 				.setNumTasks(4) // This will create 4 Bolt instances 
-				.addConfiguration(TagSite.SITE.getValue(), TagSite.CLUSTER.getValue())
+				.addConfiguration(TagSite.SITE.getValue(), TagSite.EDGE.getValue())
 				;
 
 		// Printer Bolt
