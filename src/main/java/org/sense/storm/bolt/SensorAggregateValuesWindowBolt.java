@@ -114,7 +114,8 @@ public class SensorAggregateValuesWindowBolt extends BaseWindowedBolt {
 					sensor = new Sensor(sensorId, sensorType, platformId, platformType, stationId, timestamp, value);
 					aggregatedValues.put(compositeKey, new Pair<Sensor, Long>(sensor, 1L));
 				}
-				System.out.println("Processing key[" + compositeKey + "] value[" + sensor + "]");
+				System.out.println(Thread.currentThread().getId() + "-" + Thread.currentThread().getName()
+						+ " - Processing key[" + compositeKey + "] value[" + sensor + "]");
 			}
 			for (Map.Entry<String, Pair<Sensor, Long>> entry : aggregatedValues.entrySet()) {
 
