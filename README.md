@@ -1,4 +1,5 @@
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/4a2c5b2ff2434133b1b4291da3900bcf)](https://app.codacy.com/gh/felipegutierrez/explore-storm?utm_source=github.com&utm_medium=referral&utm_content=felipegutierrez/explore-storm&utm_campaign=Badge_Grade)
 [![Build Status](https://api.travis-ci.org/felipegutierrez/explore-storm.svg?branch=master)](https://travis-ci.org/felipegutierrez/explore-storm)
 [![CodeFactor](https://www.codefactor.io/repository/github/felipegutierrez/explore-storm/badge)](https://www.codefactor.io/repository/github/felipegutierrez/explore-storm)
 
